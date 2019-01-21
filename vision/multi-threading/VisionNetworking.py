@@ -196,7 +196,7 @@ class VisionNetworking:
                     self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
                 if int(pointInfo[1][0]) > int(pointInfo[0][0]):
                     self.trackingPoint = int(pointInfo[1][1])
-                    self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint))
+                    self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
 
             # Check if the files or mode have changed and set trackbar values.
             if self.mode == "free":
