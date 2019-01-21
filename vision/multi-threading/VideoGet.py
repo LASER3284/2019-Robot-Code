@@ -30,7 +30,7 @@ class VideoGet:
             else:
                 # Adjust brightness for tracking modes.
                 if self.mode == "free":
-                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0)
+                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0) # 0.4
                 if self.mode == "tape":
                     self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.05)
 

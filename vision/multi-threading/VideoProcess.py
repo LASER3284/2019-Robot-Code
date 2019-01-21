@@ -17,13 +17,20 @@ class VideoProcess:
         self.gui = gui
         self.mode = "free"
         self.frame = frame
-        self.rotation = 0
+        self.area = [0,0,0,0]
+        self.rotation = [0,0,0,0]
+        self.trackingPoint =  0
+        self.numberOfObjects = 4
         self.processedFrame = frame
         self.objectDetected = False
         self.resolution = resolution
         self.speed = self.cps.countsPerSec()
         self.trackbarValues = trackbarValues
-        self.pointArray = [[0,0], [0,0], [0,0], [0,0]]
+        self.object1 = [[0,0], [0,0], [0,0], [0,0]]
+        self.object2 = [[0,0], [0,0], [0,0], [0,0]]
+        self.object3 = [[0,0], [0,0], [0,0], [0,0]]
+        self.object4 = [[0,0], [0,0], [0,0], [0,0]]
+        self.pointArray = [self.object1, self.object2, self.object3, self.object4]
         self.stopped = False
 
     def start(self):
@@ -51,14 +58,15 @@ class VideoProcess:
             cv2.createTrackbar("smax", "SatComp", int(self.trackbarValues[1][1]), 255, nothing)
             cv2.createTrackbar("vmin", "ValComp", int(self.trackbarValues[2][0]), 255, nothing)
             cv2.createTrackbar("vmax", "ValComp", int(self.trackbarValues[2][1]), 255, nothing)
+            cv2.createTrackbar("minArea", "Tracking", 0, 5000, nothing)
+            cv2.createTrackbar("maxArea", "Tracking", 0, 5000, nothing)
 
         while not self.stopped:
-            kernel = np.ones((5,5),np.uint8)
-
-            # Create variables for calculations.
+            # Refresh camera frame.
             frame = self.frame
-
+            
             # Take input from camera and split into three windows.
+            kernel = np.ones((5,5),np.uint8)
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             hue,sat,val = cv2.split(hsv)
 
@@ -81,6 +89,8 @@ class VideoProcess:
                     cv2.setTrackbarPos("smax", "SatComp", int(self.trackbarValues[1][1]))
                     cv2.setTrackbarPos("vmin", "ValComp", int(self.trackbarValues[2][0]))
                     cv2.setTrackbarPos("vmax", "ValComp", int(self.trackbarValues[2][1]))
+                    cv2.setTrackbarPos("minArea", "Tracking", int(self.trackbarValues[3][0]))
+                    cv2.setTrackbarPos("maxArea", "Tracking", int(self.trackbarValues[3][1]))
                     setPosition = False
 
                 # Get trackbar positions.
@@ -90,6 +100,7 @@ class VideoProcess:
                 smx = cv2.getTrackbarPos("smax","SatComp")
                 vmn = cv2.getTrackbarPos("vmin","ValComp")
                 vmx = cv2.getTrackbarPos("vmax","ValComp")
+                areaThresh = [cv2.getTrackbarPos("minArea", "Tracking"), cv2.getTrackbarPos("maxArea", "Tracking")]
             else:
                 hmn = int(self.trackbarValues[0][0])
                 hmx = int(self.trackbarValues[0][1])
@@ -97,6 +108,7 @@ class VideoProcess:
                 smx = int(self.trackbarValues[1][1])
                 vmn = int(self.trackbarValues[2][0])
                 vmx = int(self.trackbarValues[2][1])
+                areaThresh = [int(self.trackbarValues[3][0]), int(self.trackbarValues[3][1])]
 
             # Apply thresholding to windows.
             hthresh = cv2.inRange(np.array(hue),np.array(hmn),np.array(hmx))
@@ -109,19 +121,19 @@ class VideoProcess:
             clean = cv2.medianBlur(combined, 5)
             
             # Fuse the image and add slight blur to improve tracking.
-            dilation = cv2.dilate(clean, kernel, iterations = 2)
+            dilation = cv2.dilate(clean, kernel, iterations = 1) # iterations was 2
             closing = cv2.morphologyEx(dilation, cv2.MORPH_CLOSE, kernel)
-            closing = cv2.GaussianBlur(closing,(5,5),0)
+            closed = cv2.GaussianBlur(closing,(5,5),0)
 
             # Combine all HSV windows to 'closing'
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+##            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
             # Close any gaps to complete rectangle and output in new window 'closed'
-            closed = cv2.morphologyEx(closing, cv2.MORPH_CLOSE, kernel)
-            # Create a wireframe from 'closed' and output as 'edged.'
-            edged = cv2.Canny(closed, 10, 240)
+##            closed = cv2.morphologyEx(closing, cv2.MORPH_CLOSE, kernel)
+            # Create a wireframe from 'closed' and output as 'edged'
+##            edged = cv2.Canny(closed, 10, 240)
 
             # Set new threshold.
-            _, bin = cv2.threshold(edged, 40, 255, 0)
+            _, bin = cv2.threshold(closed, 40, 255, 0)
 
             # Find contours of the second image.
             bin, contours, hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -131,47 +143,121 @@ class VideoProcess:
                 # Output that program has detected object.
                 self.objectDetected = True
 
-                # Find the biggest area.
-                c = max(contours, key = cv2.contourArea)
-                rect = cv2.minAreaRect(c)
-                box = cv2.boxPoints(rect)
-                self.pointArray = box
+                # Draw filtered contours in white.
+                cv2.drawContours(frame, contours, -1, ( 255, 255, 210), 1)
+
+                # Filter out all contours except for the biggest two.
+                contours = sorted(contours, key = cv2.contourArea, reverse = True)[:int(self.numberOfObjects)]
                 
-                # Get the angle of the rectangle.
-                self.rotation = rect[2]
+                # Find contours within an area range.
+                objectCounter = 0
+                for cnts in contours:
+                    # Find contour area for thresholding and increment counter.
+                    area = cv2.contourArea(cnts)
+                    objectCounter += 1
+                    if (area < areaThresh[1]) and (area > areaThresh[0]):
+                        # Find the four points of the rectangle.
+##                        cnts = max(cnts, key = cv2.contourArea)
+                        rect = cv2.minAreaRect(cnts)
+                        box = cv2.boxPoints(rect)
+                        
+                        # Store points, rotation, and area of object for calculations.
+                        if objectCounter == 1:
+                            self.object1 = box
+                            self.pointArray[0] = self.object1
+                            self.rotation[0] = rect[2]
+                            self.area[0] = area
+                        if objectCounter == 2:
+                            self.object2 = box
+                            self.pointArray[1] = self.object2
+                            self.rotation[1] = rect[2]
+                            self.area[1] = area
+                        if objectCounter == 3:
+                            self.object3 = box
+                            self.pointArray[2] = self.object3
+                            self.rotation[2] = rect[2]
+                            self.area[2] = area
+                        if objectCounter == 4:
+                            self.object4 = box
+                            self.pointArray[3] = self.object4
+                            self.rotation[3] = rect[2]
+                            self.area[3] = area
 
-                if self.gui == "yes":
-                    # Draw circles and numbers.
-                    nameStepper = 0
-                    for p in box:
-                        nameStepper = nameStepper + 1
-                        # Draw blue circles and numbers.
-                        pt = int(p[0]), int(p[1])
-                        cv2.circle(frame, pt, 5, (255, 0, 0), 2)
-                        font = cv2.FONT_HERSHEY_SIMPLEX
-                        cv2.putText(frame, str(nameStepper), pt, font, 1, (0, 0, 255), 1, cv2.LINE_AA)
+                        # Draw tracking overlay for gui enabled.
+                        if self.gui == "yes":
+                            # Draw circles and numbers.
+                            nameStepper = 0
+                            cv2.line(frame, (int(self.trackingPoint), 0), (int(self.trackingPoint), int(self.resolution[1])), (0,255,0), 1)
+                            for p in box:
+                                nameStepper = nameStepper + 1
+                                # Draw blue circles and numbers.
+                                pt = int(p[0]), int(p[1])
+                                cv2.circle(frame, pt, 5, (255, 0, 0), 1)
+                                font = cv2.FONT_HERSHEY_SIMPLEX
+                                cv2.putText(frame, str(nameStepper), pt, font, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
-                if self.gui == "no":
-                    # Draw enclosing circle.
-                    cv2.drawContours(frame, contours, -1, ( 255, 255, 210), 1)
-                    (x, y), radius = cv2.minEnclosingCircle(c)
-                    cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 0), 1)
-                    nameStepper = 0
-                    for p in box:
-                        # Draw blue circles.
-                        pt = int(p[0]), int(p[1])
-                        cv2.circle(frame, pt, 5, (255, 0, 0), 1)
+                        # Draw tracking overlay with gui disabled.
+                        if self.gui == "no":
+                            # Draw enclosing circle.
+                            (x, y), radius = cv2.minEnclosingCircle(cnts)
+                            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 0), 1)
+                            cv2.line(frame, (int(self.trackingPoint), 0), (int(self.trackingPoint), int(self.resolution[1])), (0,255,0), 1)
+                            nameStepper = 0
+                            for p in box:
+                                # Draw blue circles.
+                                pt = int(p[0]), int(p[1])
+                                cv2.circle(frame, pt, 5, (255, 0, 0), 1)
+                    
+                    else:
+                        # Default values if only one object is detected.
+                        if objectCounter == 1:
+                            self.object1[0][0] = (self.resolution[0] / 2) - 4
+                            self.object1[0][1] = (self.resolution[1] / 2) - 4
+                            self.object1[1][0] = (self.resolution[0] / 2) - 4
+                            self.object1[1][1] = (self.resolution[1] / 2) + 4
+                            self.object1[2][0] = (self.resolution[0] / 2) + 4
+                            self.object1[2][1] = (self.resolution[1] / 2) - 4
+                            self.object1[3][0] = (self.resolution[0] / 2) + 4
+                            self.object1[3][1] = (self.resolution[1] / 2) + 4
+                        if objectCounter == 2:
+                            self.object2[0][0] = (self.resolution[0] / 2) - 4
+                            self.object2[0][1] = (self.resolution[1] / 2) - 4
+                            self.object2[1][0] = (self.resolution[0] / 2) - 4
+                            self.object2[1][1] = (self.resolution[1] / 2) + 4
+                            self.object2[2][0] = (self.resolution[0] / 2) + 4
+                            self.object2[2][1] = (self.resolution[1] / 2) - 4
+                            self.object2[3][0] = (self.resolution[0] / 2) + 4
+                            self.object2[3][1] = (self.resolution[1] / 2) + 4
+                        if objectCounter == 3:
+                            self.object3[0][0] = (self.resolution[0] / 2) - 4
+                            self.object3[0][1] = (self.resolution[1] / 2) - 4
+                            self.object3[1][0] = (self.resolution[0] / 2) - 4
+                            self.object3[1][1] = (self.resolution[1] / 2) + 4
+                            self.object3[2][0] = (self.resolution[0] / 2) + 4
+                            self.object3[2][1] = (self.resolution[1] / 2) - 4
+                            self.object3[3][0] = (self.resolution[0] / 2) + 4
+                            self.object3[3][1] = (self.resolution[1] / 2) + 4
+                        if objectCounter == 4:
+                            self.object4[0][0] = (self.resolution[0] / 2) - 4
+                            self.object4[0][1] = (self.resolution[1] / 2) - 4
+                            self.object4[1][0] = (self.resolution[0] / 2) - 4
+                            self.object4[1][1] = (self.resolution[1] / 2) + 4
+                            self.object4[2][0] = (self.resolution[0] / 2) + 4
+                            self.object4[2][1] = (self.resolution[1] / 2) - 4
+                            self.object4[3][0] = (self.resolution[0] / 2) + 4
+                            self.object4[3][1] = (self.resolution[1] / 2) + 4
 
             else:
                 # Default values if nothing is detected.
-                self.pointArray[0][0] = (self.resolution[0] / 2) - 4
-                self.pointArray[0][1] = (self.resolution[1] / 2) - 4
-                self.pointArray[1][0] = (self.resolution[0] / 2) - 4
-                self.pointArray[1][1] = (self.resolution[1] / 2) + 4
-                self.pointArray[2][0] = (self.resolution[0] / 2) + 4
-                self.pointArray[2][1] = (self.resolution[1] / 2) - 4
-                self.pointArray[3][0] = (self.resolution[0] / 2) + 4
-                self.pointArray[3][1] = (self.resolution[1] / 2) + 4
+                for object in self.pointArray:
+                    object[0][0] = (self.resolution[0] / 2) - 4
+                    object[0][1] = (self.resolution[1] / 2) - 4
+                    object[1][0] = (self.resolution[0] / 2) - 4
+                    object[1][1] = (self.resolution[1] / 2) + 4
+                    object[2][0] = (self.resolution[0] / 2) + 4
+                    object[2][1] = (self.resolution[1] / 2) - 4
+                    object[3][0] = (self.resolution[0] / 2) + 4
+                    object[3][1] = (self.resolution[1] / 2) + 4
                 # Output that the program does not detect an object.
                 self.objectDetected = False
 
@@ -186,7 +272,7 @@ class VideoProcess:
                 cv2.imshow("Dilation", dilation)
                 cv2.imshow("Closing", closing)
                 cv2.imshow("Closed", closed)
-                cv2.imshow("Edged", edged)
+##                cv2.imshow("Edged", edged)
                 cv2.imshow("Tracking", frame)
 
             # Send the final frame for streaming.

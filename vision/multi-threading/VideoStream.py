@@ -94,7 +94,7 @@ class VideoStream():
         while not self.stopped:
             streamFrame = self.processedFrame
             stopped = self.stopped
-            time.sleep(0.1)
+            time.sleep(0.05)
 
     def stop(self):
         self.stopped = True

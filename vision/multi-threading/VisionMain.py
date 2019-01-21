@@ -41,9 +41,9 @@ def multiThreading(gui, server, source=0):
 
     # Create Object Pointers
     video_getter = VideoGet(source).start()
-    video_processor = VideoProcess(gui, video_getter.frame, video_getter.resolution, [[0,0], [0,0], [0,0]]).start()
+    video_processor = VideoProcess(gui, video_getter.frame, video_getter.resolution, [[0,0], [0,0], [0,0], [0,0]]).start()
     video_streamer = VideoStream(video_getter.stopped, video_processor.processedFrame).start()
-    vision_networking = VisionNetworking(gui, server, video_processor.pointArray, video_processor.objectDetected, video_processor.rotation, video_getter.resolution).start()
+    vision_networking = VisionNetworking(gui, server, video_processor.pointArray).start()
     
     # Main multithreading loop.
     while True:
@@ -60,13 +60,6 @@ def multiThreading(gui, server, source=0):
         video_processor.frame = frame                     # Push camera frame to VideoProcess class for vision processing.
         stream = video_processor.processedFrame           # Grab the processed frame.
         video_streamer.processedFrame = stream            # Push processed frame to VideoStream class.
-        objectDetected = video_processor.objectDetected   # Grab boolean value for objectDetected.
-        vision_networking.objectDetected = objectDetected # Push objectDetected boolean to VisionNetworking.
-        rotation = video_processor.rotation               # Grab object rotation.
-        vision_networking.rotation = rotation             # Push rotation ro VisionNetworking.
-        resolution = video_getter.resolution              # Grab camera resolution.
-        vision_networking.resolution = resolution         # Push camera resolution to VideoNetworking class.
-        video_processor.resolution = resolution           # Push camera resolution to VideoProcess class.
 
         # Pass required info between classes.
         trackbarValues = vision_networking.trackbarValues # Pass trackbar values from VisionNetworking to VisionProcess.
@@ -77,9 +70,22 @@ def multiThreading(gui, server, source=0):
         video_processor.mode = mode
         speed = video_processor.speed                     # Pass vision speed from VideProcess to VisionNetworking
         vision_networking.speed = speed
+        objectDetected = video_processor.objectDetected   # Pass objectDetected from VisionProcess to VisionNetworking.
+        vision_networking.objectDetected = objectDetected
+        rotation = video_processor.rotation               # Pass object rotation from VideoProcess to VisionNetworking.
+        vision_networking.rotation = rotation
+        resolution = video_getter.resolution              # Pass resolution from VideoGet to VisionNetworking and VideoProcess.
+        vision_networking.resolution = resolution
+        video_processor.resolution = resolution
+        area = video_processor.area                       # Pass area from VideoProcess to VisionNetworking.
+        vision_networking.area = area
+        number = vision_networking.numberOfObjects        # Pass numberOfObjects from VisionNetworking to VideoProcess.
+        video_processor.numberOfObjects = number
+        trackingPoint = vision_networking.trackingPoint   # Pass trackingPoint from VisionNetworking to VideoProcess.
+        video_processor.trackingPoint = trackingPoint
             
         # Add delay so other threads can catch up.
-        time.sleep(0.02)
+        time.sleep(0.05)
 
 def main():
     ap = argparse.ArgumentParser()
