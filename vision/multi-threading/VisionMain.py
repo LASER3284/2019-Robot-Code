@@ -15,7 +15,7 @@ def putIterationsPerSec(frame, iterations_per_sec):
         (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
     return frame
 
-def noThreading(source=0):
+def noThreading(source):
     '''
     Grab and show video frames without multithreading.
     '''
@@ -66,9 +66,10 @@ def multiThreading(gui, server, source=0):
         video_processor.trackbarValues = trackbarValues
         pointArray = video_processor.pointArray           # Pass vision points from VideoProcess to VisionNetworking.
         vision_networking.pointArray = pointArray
-        mode = vision_networking.mode                     # Pass vision mode from VisionNetworking to VideoProcess
+        mode = vision_networking.mode                     # Pass vision mode from VisionNetworking to VideoProcess and VideoGet.
         video_processor.mode = mode
-        speed = video_processor.speed                     # Pass vision speed from VideProcess to VisionNetworking
+        video_getter.mode = mode
+        speed = video_processor.speed                     # Pass vision speed from VideProcess to VisionNetworking.
         vision_networking.speed = speed
         objectDetected = video_processor.objectDetected   # Pass objectDetected from VisionProcess to VisionNetworking.
         vision_networking.objectDetected = objectDetected

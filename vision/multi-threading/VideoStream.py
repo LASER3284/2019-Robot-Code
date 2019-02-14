@@ -14,7 +14,7 @@ class socketHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "multipart/x-mixed-replace; boundary=--jpgboundary")
             self.end_headers()
-            while True:
+            while not stopped:
                 try:
                     # Take in stream.
                     img = streamFrame
@@ -47,7 +47,7 @@ class socketHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write("<html><head></head><body>")
-            self.wfile.write('<img src="http://10.32.84.55:8080/cam.mjpg"/>')
+            self.wfile.write('<img src="http://10.32.85.232:8080/cam.mjpg"/>')
             self.wfile.write("</body></html>")
             return
 
@@ -66,15 +66,15 @@ class HTTPRefresher():
     
     def refresh(self):
         # Start HTTP server and process requests.
-        server = ThreadedHTTPServer(("10.32.84.55", 8080), socketHandler)
+        server = ThreadedHTTPServer(("10.32.85.232", 8080), socketHandler)
         print "MJPG Streaming Server Started..."
-        server.serve_forever()
+        while not stopped:
+            server.handle_request()
 
 class VideoStream():
     def __init__(self, stopped, processedFrame = None):
         # Create local variables.
         self.processedFrame = processedFrame
-        self.stopped = False
 
     def start(self):
         Thread(target=self.stream, args=()).start()
@@ -91,10 +91,11 @@ class VideoStream():
         HTTPRefresher().start()
         
         # Pass processedFrame to socketHandler.
-        while not self.stopped:
-            streamFrame = self.processedFrame
-            stopped = self.stopped
+        while not stopped:
+            frame = self.processedFrame
+            frame = cv2.resize(frame, (400,300))
+            streamFrame = frame
             time.sleep(0.05)
 
     def stop(self):
-        self.stopped = True
+        stopped = True

@@ -10,10 +10,10 @@ class VideoGet:
     '''
     def __init__(self, src=0):
         # Create global variables.
-        self.mode = "free"
+        self.mode = "tape"
         self.stream = cv2.VideoCapture(src)
-        self.stream.set(3, 180)                            # 300->288 | 100->120
-        self.stream.set(4, 240)                            # 400->352 | 100->160
+        self.stream.set(3, 400)                            # 300->288 | 100->120
+        self.stream.set(4, 300)                            # 400->352 | 100->160
         (self.grabbed, self.frame) = self.stream.read()
         self.resolution = [self.stream.get(3), self.stream.get(4)]
         self.stopped = False
@@ -30,9 +30,11 @@ class VideoGet:
             else:
                 # Adjust brightness for tracking modes.
                 if self.mode == "free":
-                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0) # 0.4
-                if self.mode == "tape":
-                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.05)
+                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.4)
+		    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.01)
+                #if self.mode == "tape":
+                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.1)
+                    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.005)
 
                 # Read video stream.
                 (self.grabbed, self.frame) = self.stream.read()

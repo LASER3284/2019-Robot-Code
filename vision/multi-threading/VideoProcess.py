@@ -63,8 +63,8 @@ class VideoProcess:
 
         while not self.stopped:
             # Refresh camera frame.
-            frame = self.frame
-            
+            frame = self.frame.copy()
+
             # Take input from camera and split into three windows.
             kernel = np.ones((5,5),np.uint8)
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -121,19 +121,19 @@ class VideoProcess:
             clean = cv2.medianBlur(combined, 5)
             
             # Fuse the image and add slight blur to improve tracking.
-            dilation = cv2.dilate(clean, kernel, iterations = 1) # iterations was 2
-            closing = cv2.morphologyEx(dilation, cv2.MORPH_CLOSE, kernel)
-            closed = cv2.GaussianBlur(closing,(5,5),0)
+            #dilation = cv2.dilate(clean, kernel, iterations = 1)
+            closed = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel)
+            blurred = cv2.GaussianBlur(closed,(5,5),0)
 
             # Combine all HSV windows to 'closing'
-##            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+            #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
             # Close any gaps to complete rectangle and output in new window 'closed'
-##            closed = cv2.morphologyEx(closing, cv2.MORPH_CLOSE, kernel)
+            #closed = cv2.morphologyEx(closing, cv2.MORPH_CLOSE, kernel)
             # Create a wireframe from 'closed' and output as 'edged'
-##            edged = cv2.Canny(closed, 10, 240)
+            #edged = cv2.Canny(closed, 10, 240)
 
             # Set new threshold.
-            _, bin = cv2.threshold(closed, 40, 255, 0)
+            _, bin = cv2.threshold(blurred, 40, 255, 0)
 
             # Find contours of the second image.
             bin, contours, hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -146,9 +146,9 @@ class VideoProcess:
                 # Draw filtered contours in white.
                 cv2.drawContours(frame, contours, -1, ( 255, 255, 210), 1)
 
-                # Filter out all contours except for the biggest two.
+                # Filter out all contours except for the biggest numberOfObjects.
                 contours = sorted(contours, key = cv2.contourArea, reverse = True)[:int(self.numberOfObjects)]
-                
+
                 # Find contours within an area range.
                 objectCounter = 0
                 for cnts in contours:
@@ -157,7 +157,6 @@ class VideoProcess:
                     objectCounter += 1
                     if (area < areaThresh[1]) and (area > areaThresh[0]):
                         # Find the four points of the rectangle.
-##                        cnts = max(cnts, key = cv2.contourArea)
                         rect = cv2.minAreaRect(cnts)
                         box = cv2.boxPoints(rect)
                         
@@ -185,24 +184,43 @@ class VideoProcess:
 
                         # Draw tracking overlay for gui enabled.
                         if self.gui == "yes":
-                            # Draw circles and numbers.
+                            # Create temp variables.
                             nameStepper = 0
-                            cv2.line(frame, (int(self.trackingPoint), 0), (int(self.trackingPoint), int(self.resolution[1])), (0,255,0), 1)
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+
+                            # Draw object detected text.
+                            if self.trackingPoint == self.resolution[0] / 2:
+                                cv2.putText(frame, "Objects Detected...", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                            else:
+                                cv2.putText(frame, "Object Lock!", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.line(frame, (int(self.trackingPoint), int(box[2][1])), (int(self.trackingPoint), int(box[0][1])), (0,255,0), 2)
+
+                            # Draw circles and numbers.
                             for p in box:
                                 nameStepper = nameStepper + 1
                                 # Draw blue circles and numbers.
                                 pt = int(p[0]), int(p[1])
+                                pt2 = int(p[0]) - 50, int(p[1]) - 50
                                 cv2.circle(frame, pt, 5, (255, 0, 0), 1)
-                                font = cv2.FONT_HERSHEY_SIMPLEX
                                 cv2.putText(frame, str(nameStepper), pt, font, 1, (0, 0, 255), 1, cv2.LINE_AA)
+                                cv2.putText(frame, str(objectCounter), pt2, font, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
                         # Draw tracking overlay with gui disabled.
                         if self.gui == "no":
+                            # Create temp variables.
+                            nameStepper = 0
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            
+                            # Draw object detected text.
+                            if self.trackingPoint == 0:
+                                cv2.putText(frame, "Objects Detected...", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                            else:
+                                cv2.putText(frame, "Object Lock!", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.line(frame, (int(self.trackingPoint), int(box[2][1])), (int(self.trackingPoint), int(box[0][1])), (0,255,0), 2)
+                            
                             # Draw enclosing circle.
                             (x, y), radius = cv2.minEnclosingCircle(cnts)
                             cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 0), 1)
-                            cv2.line(frame, (int(self.trackingPoint), 0), (int(self.trackingPoint), int(self.resolution[1])), (0,255,0), 1)
-                            nameStepper = 0
                             for p in box:
                                 # Draw blue circles.
                                 pt = int(p[0]), int(p[1])
@@ -269,10 +287,10 @@ class VideoProcess:
                 cv2.imshow("ValComp", vthresh)
                 cv2.imshow("Combined", combined)
                 cv2.imshow("Clean", clean)
-                cv2.imshow("Dilation", dilation)
-                cv2.imshow("Closing", closing)
+                #cv2.imshow("Dilation", dilation)
                 cv2.imshow("Closed", closed)
-##                cv2.imshow("Edged", edged)
+                cv2.imshow("Blurred", blurred)
+                #cv2.imshow("Edged", edged)
                 cv2.imshow("Tracking", frame)
 
             # Send the final frame for streaming.
