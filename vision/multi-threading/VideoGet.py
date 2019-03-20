@@ -1,6 +1,7 @@
 from threading import Thread
 #from multiprocessing import Process
 import numpy
+import time
 import cv2
 
 class VideoGet:
@@ -11,11 +12,15 @@ class VideoGet:
     def __init__(self, src=0):
         # Create global variables.
         self.mode = "tape"
-        self.stream = cv2.VideoCapture(src)
-        self.stream.set(3, 400)                            # 300->288 | 100->120
-        self.stream.set(4, 300)                            # 400->352 | 100->160
-        (self.grabbed, self.frame) = self.stream.read()
-        self.resolution = [self.stream.get(3), self.stream.get(4)]
+        self.cameraSource = 1
+        self.camera1 = cv2.VideoCapture(src)
+        self.camera1.set(3, 400)
+        self.camera1.set(4, 300)
+        self.camera2 = cv2.VideoCapture(1)
+        self.camera2.set(3, 400)
+        self.camera2.set(4, 300)
+        (self.grabbed, self.frame) = self.camera1.read()
+        self.resolution = [self.camera1.get(3), self.camera1.get(4)]
         self.stopped = False
 
     def start(self):
@@ -28,16 +33,32 @@ class VideoGet:
             if not self.grabbed:
                 self.stop()
             else:
-                # Adjust brightness for tracking modes.
-                if self.mode == "free":
-                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.4)
-		    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.01)
-                #if self.mode == "tape":
-                    self.stream.set(cv2.CAP_PROP_BRIGHTNESS, 0.1)
-                    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.005)
+            	# Determine which camera source to grab from.
+            	if self.cameraSource == 1:
+            		# Adjust brightness for tracking modes.
+	                if self.mode == "free":
+	                    self.camera1.set(cv2.CAP_PROP_BRIGHTNESS, 0.4)
+			            #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.01)
+	                if self.mode == "tape":
+	                    self.camera1.set(cv2.CAP_PROP_BRIGHTNESS, -100)
+	                    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.005)
 
-                # Read video stream.
-                (self.grabbed, self.frame) = self.stream.read()
+            		# Get low camera.
+            		(self.grabbed, self.frame) = self.camera1.read()
+            	else:
+            		# Adjust brightness for tracking modes.
+	                if self.mode == "free":
+	                    self.camera2.set(cv2.CAP_PROP_BRIGHTNESS, 0.4)
+			            #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.01)
+	                if self.mode == "tape":
+	                    self.camera2.set(cv2.CAP_PROP_BRIGHTNESS, -100)
+	                    #self.stream.set(cv2.CAP_PROP_EXPOSURE, 0.005)
+
+            		# Get high camera.
+            		(self.grabbed, self.frame) = self.camera2.read()
+
+                # Add time delay when reading from video files.
+                #time.sleep(0.5)
 
     def stop(self):
         self.stopped = True

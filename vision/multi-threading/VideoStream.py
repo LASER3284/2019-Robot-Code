@@ -9,6 +9,9 @@ import time
 import cv2
 
 class socketHandler(BaseHTTPRequestHandler):
+    '''
+    Class that serves and packages the processed camera frame.
+    '''
     def do_GET(self):
         if self.path.endswith(".mjpg"):
             self.send_response(200)
@@ -47,18 +50,18 @@ class socketHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write("<html><head></head><body>")
-            self.wfile.write('<img src="http://10.32.85.232:8080/cam.mjpg"/>')
+            self.wfile.write('<img src="http://10.32.84.10:5810/cam.mjpg"/>')
             self.wfile.write("</body></html>")
             return
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     '''
-    Handle requests in a separate thread.
+    Class for handling requests in a separate thread.
     ''' 
 
 class HTTPRefresher():
     '''
-    Constantly searches for new requests.
+    Class that constantly searches for new requests.
     '''
     def start(self):
         Thread(target=self.refresh, args=()).start()
@@ -66,12 +69,15 @@ class HTTPRefresher():
     
     def refresh(self):
         # Start HTTP server and process requests.
-        server = ThreadedHTTPServer(("10.32.85.232", 8080), socketHandler)
+        server = ThreadedHTTPServer(("10.32.84.10", 5810), socketHandler)
         print "MJPG Streaming Server Started..."
         while not stopped:
             server.handle_request()
 
 class VideoStream():
+    '''
+    Class for passes processed camera frame and starting other threads.
+    '''
     def __init__(self, stopped, processedFrame = None):
         # Create local variables.
         self.processedFrame = processedFrame
@@ -93,7 +99,7 @@ class VideoStream():
         # Pass processedFrame to socketHandler.
         while not stopped:
             frame = self.processedFrame
-            frame = cv2.resize(frame, (400,300))
+            frame = cv2.resize(frame, (200, 100))
             streamFrame = frame
             time.sleep(0.05)
 

@@ -84,9 +84,11 @@ def multiThreading(gui, server, source=0):
         video_processor.numberOfObjects = number
         trackingPoint = vision_networking.trackingPoint   # Pass trackingPoint from VisionNetworking to VideoProcess.
         video_processor.trackingPoint = trackingPoint
+        cameraSource = vision_networking.cameraSource     # Pass cameraSource from VisionNetworking to VideoGet.
+        video_getter.cameraSource = cameraSource
             
         # Add delay so other threads can catch up.
-        time.sleep(0.05)
+        time.sleep(0.02)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -94,13 +96,13 @@ def main():
         help="Path to video file or integer representing webcam index"
             + " (default 0).")
     ap.add_argument("--thread", "-t", default="none",
-        help="Threading mode: all (video read, process, streaming and networking run in their own threads),"
+        help="Threading mode: all (video get, process, streaming, and networking run in their own threads),"
             + " none (default--no multithreading)")
     ap.add_argument("--gui", "-g", default="no",
         help="Graphical User Interface: yes (show video windows for vision tuning),"
             + " no (default, run supa fast)")
-    ap.add_argument("--server", "-S", default="10.32.84.2",
-        help="Server IP for NetworkTables communication. (default: 10.32.84.2)")
+    ap.add_argument("--server", "-r", default="10.32.85.2",
+        help="Server IP for NetworkTables communication. (default: 10.32.85.2)")
     args = vars(ap.parse_args())
 
     if args["thread"] == "all":

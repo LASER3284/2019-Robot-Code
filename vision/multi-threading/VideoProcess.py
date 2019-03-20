@@ -1,6 +1,7 @@
 from threading import Thread
 #from multiprocessing import Process
 import numpy as np
+import time
 import cv2
 import cv2 as cv
 from CountsPerSec import CountsPerSec
@@ -20,7 +21,7 @@ class VideoProcess:
         self.area = [0,0,0,0]
         self.rotation = [0,0,0,0]
         self.trackingPoint =  0
-        self.numberOfObjects = 4
+        self.numberOfObjects = 2
         self.processedFrame = frame
         self.objectDetected = False
         self.resolution = resolution
@@ -140,8 +141,17 @@ class VideoProcess:
 
             # Read contours and draw the four points of rectangle.
             if len(contours) != 0:
-                # Output that program has detected object.
+                # Output that program has detected object and reset object values.
                 self.objectDetected = True
+                for object in self.pointArray:
+                    object[0][0] = (self.resolution[0] / 2) - 4
+                    object[0][1] = (self.resolution[1] / 2) - 4
+                    object[1][0] = (self.resolution[0] / 2) - 4
+                    object[1][1] = (self.resolution[1] / 2) + 4
+                    object[2][0] = (self.resolution[0] / 2) + 4
+                    object[2][1] = (self.resolution[1] / 2) - 4
+                    object[3][0] = (self.resolution[0] / 2) + 4
+                    object[3][1] = (self.resolution[1] / 2) + 4
 
                 # Draw filtered contours in white.
                 cv2.drawContours(frame, contours, -1, ( 255, 255, 210), 1)
@@ -189,7 +199,7 @@ class VideoProcess:
                             font = cv2.FONT_HERSHEY_SIMPLEX
 
                             # Draw object detected text.
-                            if self.trackingPoint == self.resolution[0] / 2:
+                            if self.trackingPoint == 0:
                                 cv2.putText(frame, "Objects Detected...", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
                             else:
                                 cv2.putText(frame, "Object Lock!", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
@@ -225,45 +235,6 @@ class VideoProcess:
                                 # Draw blue circles.
                                 pt = int(p[0]), int(p[1])
                                 cv2.circle(frame, pt, 5, (255, 0, 0), 1)
-                    
-                    else:
-                        # Default values if only one object is detected.
-                        if objectCounter == 1:
-                            self.object1[0][0] = (self.resolution[0] / 2) - 4
-                            self.object1[0][1] = (self.resolution[1] / 2) - 4
-                            self.object1[1][0] = (self.resolution[0] / 2) - 4
-                            self.object1[1][1] = (self.resolution[1] / 2) + 4
-                            self.object1[2][0] = (self.resolution[0] / 2) + 4
-                            self.object1[2][1] = (self.resolution[1] / 2) - 4
-                            self.object1[3][0] = (self.resolution[0] / 2) + 4
-                            self.object1[3][1] = (self.resolution[1] / 2) + 4
-                        if objectCounter == 2:
-                            self.object2[0][0] = (self.resolution[0] / 2) - 4
-                            self.object2[0][1] = (self.resolution[1] / 2) - 4
-                            self.object2[1][0] = (self.resolution[0] / 2) - 4
-                            self.object2[1][1] = (self.resolution[1] / 2) + 4
-                            self.object2[2][0] = (self.resolution[0] / 2) + 4
-                            self.object2[2][1] = (self.resolution[1] / 2) - 4
-                            self.object2[3][0] = (self.resolution[0] / 2) + 4
-                            self.object2[3][1] = (self.resolution[1] / 2) + 4
-                        if objectCounter == 3:
-                            self.object3[0][0] = (self.resolution[0] / 2) - 4
-                            self.object3[0][1] = (self.resolution[1] / 2) - 4
-                            self.object3[1][0] = (self.resolution[0] / 2) - 4
-                            self.object3[1][1] = (self.resolution[1] / 2) + 4
-                            self.object3[2][0] = (self.resolution[0] / 2) + 4
-                            self.object3[2][1] = (self.resolution[1] / 2) - 4
-                            self.object3[3][0] = (self.resolution[0] / 2) + 4
-                            self.object3[3][1] = (self.resolution[1] / 2) + 4
-                        if objectCounter == 4:
-                            self.object4[0][0] = (self.resolution[0] / 2) - 4
-                            self.object4[0][1] = (self.resolution[1] / 2) - 4
-                            self.object4[1][0] = (self.resolution[0] / 2) - 4
-                            self.object4[1][1] = (self.resolution[1] / 2) + 4
-                            self.object4[2][0] = (self.resolution[0] / 2) + 4
-                            self.object4[2][1] = (self.resolution[1] / 2) - 4
-                            self.object4[3][0] = (self.resolution[0] / 2) + 4
-                            self.object4[3][1] = (self.resolution[1] / 2) + 4
 
             else:
                 # Default values if nothing is detected.
@@ -303,6 +274,9 @@ class VideoProcess:
             # Add small delay and if q is pressed quit.
             if cv2.waitKey(1) == ord("q"):
                 self.stopped = True
+
+            # Wait for other threads to catch up.
+            time.sleep(0.02)
 
     def stop(self):
         self.stopped = True

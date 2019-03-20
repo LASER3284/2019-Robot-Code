@@ -6,6 +6,7 @@ import json
 import math
 import time
 import cv2
+from simple_pid import PID
 from networktables import NetworkTables
 
 class VisionNetworking:
@@ -16,10 +17,11 @@ class VisionNetworking:
     def __init__(self, gui, server, pointArray):
         # Create global variables.
         self.gui = gui
-        self.numberOfObjects = 4
+        self.numberOfObjects = 2
         self.mode = "tape"
         self.speed = 0
         self.server = server
+        self.cameraSource = 1
         self.trackingPoint = 0
         self.area = [0,0,0,0]
         self.resolution = [0,0]
@@ -35,34 +37,44 @@ class VisionNetworking:
         NetworkTables.initialize(server = ip)
         self.NWTB = NetworkTables.getTable("SmartDashboard")
 
-        # Send vision NetworkTable data.
+        # Send placeholder vision NetworkTable data.
         self.NWTB.putBoolean("VisionFreeMode", False)
-        self.NWTB.putNumber("LidarDistanceLeft", 0)
-        self.NWTB.putNumber("LidarDistanceCenter", 0)
-        self.NWTB.putNumber("LidarDistanceRight", 0)
+        self.NWTB.putBoolean("VisionIsActive", False)
         self.NWTB.putNumber("VisionMinArea", 0)
-        self.NWTB.putNumber("VisionMaxArea", 3000)
-        self.NWTB.putNumber("VisionTolerance", 15)
-        self.NWTB.putNumber("VisionMinDistance", 500)
-        self.NWTB.putNumber("VisionProportional", 0.3)
-        self.NWTB.putNumber("VisionSpeedForward", 0.20)
-        self.NWTB.putNumber("VisionSpeedMultiplier", 0.0003)
-        self.NWTB.putNumber("VisionNumberOfObjects", 4)
-        self.NWTB.putString("VisionFilterSide", "center")
+        self.NWTB.putNumber("VisionMaxArea", 5000)
+        self.NWTB.putNumber("VisionTolerance", 5)
+        self.NWTB.putNumber("VisionProportional", 0.135)
+        self.NWTB.putNumber("VisionIntegral", 0.08)
+        self.NWTB.putNumber("VisionDerivative", 0.01)
+        self.NWTB.putNumber("VisionSpeedForward", 0.145)
+        self.NWTB.putNumber("VisionTurningSpeed", 0.12)
+        self.NWTB.putNumber("VisionNumberOfObjects", 2)
+        self.NWTB.putNumber("VisionCenterOffset", 0)
+        self.NWTB.putNumber("VisionCameraSource", 1)
         self.NWTB.putNumber("VisionVirtualJoystickX", 0)
         self.NWTB.putNumber("VisionVirtualJoystickY", 0)
-        self.NWTB.putNumber("VisionHorizontalRes", self.resolution[0])
+        self.NWTB.putString("VisionFilterSide", "center")
         self.minArea = self.NWTB.getEntry("VisionMinArea")
         self.maxArea = self.NWTB.getEntry("VisionMaxArea")
         self.freeModeEnabled = self.NWTB.getEntry("VisionFreeMode")
+        self.visionIsActive = self.NWTB.getEntry("VisionIsActive")
+        self.armActual = self.NWTB.getEntry("Arm Actual")
+        self.centerOffset = self.NWTB.getEntry("VisionCenterOffset")
+        self.cameraIndex = self.NWTB.getEntry("VisionCameraSource")
         self.tolerance = self.NWTB.getEntry("VisionTolerance")
-        self.minDistance = self.NWTB.getEntry("VisionMinDistance")
-        self.proportional = self.NWTB.getEntry("VisionProportional")
-        self.speedForward = self.NWTB.getEntry("VisionSpeedForward")
-        self.speedForwardMultiplier = self.NWTB.getEntry("VisionSpeedMultiplier")
-        self.amountOfObjectsToTrack = self.NWTB.getEntry("VisionNumberOfObjects")
         self.filterSide = self.NWTB.getEntry("VisionFilterSide")
-        self.lidarDistances = [self.NWTB.getEntry("LidarDistanceLeft"), self.NWTB.getEntry("LidarDistanceCenter"), self.NWTB.getEntry("LidarDistanceRight")]
+        self.proportional = self.NWTB.getEntry("VisionProportional")
+        self.integral = self.NWTB.getEntry("VisionIntegral")
+        self.derivative = self.NWTB.getEntry("VisionDerivative")
+        self.speedForward = self.NWTB.getEntry("VisionSpeedForward")
+        self.turningSpeed = self.NWTB.getEntry("VisionTurningSpeed")
+        self.amountOfObjectsToTrack = self.NWTB.getEntry("VisionNumberOfObjects")
+
+        # Create and setup the PID object.
+        self.pid = PID(self.proportional.value, self.integral.value, self.derivative.value, setpoint = 0)
+        self.pid.output_limits = (-100, 100)        
+        self.pid.sample_time = 0.02
+        self.pid.auto_mode = True
 
         # Open values from files and set trackbar position.
         with open("/home/nvidia/Desktop/Values/trackbarValues.json") as data_file:
@@ -91,6 +103,7 @@ class VisionNetworking:
             self.numberOfObjects = self.amountOfObjectsToTrack.value
             self.trackbarValues[3][0] = self.minArea.value
             self.trackbarValues[3][1] = self.maxArea.value
+            self.cameraSource = self.cameraIndex.value
             if (self.freeModeEnabled.value == True) and (modeSwitcher == 0):
                 self.mode = "free"
                 modeSwitcher = 1
@@ -142,7 +155,9 @@ class VisionNetworking:
                 # Find the distances of the objects from the left of the screen.
                 objectCounter = 0
                 for object in self.pointArray:
-                    if (object[0][0] != (self.resolution[0] / 2) - 4) and (object[1][0] != (self.resolution[0] / 2) - 4):
+                    if (object[0][0] == (self.resolution[0] / 2) - 4) and (object[1][0] == (self.resolution[0] / 2) - 4):
+                        distances[objectCounter][1] = 0
+                    else:
                         distances[objectCounter][1] = object[2][0]
                     
                     # Increment objectCounter
@@ -150,6 +165,7 @@ class VisionNetworking:
 
                 # Sorted the values in ascending order.
                 distances = sorted(distances, key=lambda distances: distances[1])
+                print "Distances: " + str(distances)
 
                 # Find the intersection for all pairs of points.
                 objectCounter = 0
@@ -196,11 +212,12 @@ class VisionNetworking:
                     trackingPoints[objectCounter - 1][1] = y
 
                 # Determine which point is clostest to center and above the objects.
+                print "Tracking Points: " + str(trackingPoints)
                 pointCounter = 0
                 filterPoints = [[0,0], [0,0]]
                 for point in trackingPoints:
                     # Filter out inverted tracking points.
-                    if point[1] > self.pointArray[0][2][1]:
+                    if point[1] > self.pointArray[0][0][1]:
                         point[0] = 0
                         point[1] = self.resolution[0]
                     # If point is not inverted add it to the array.
@@ -214,6 +231,7 @@ class VisionNetworking:
                         pointCounter += 1
 
                 # Remove any numbers of infinity.
+                print "Filter Points: " + str(filterPoints)
                 for info in filterPoints:
                     if (math.isinf(info[0])) or (math.isinf(info[1])):
                         info[0] = 0
@@ -224,32 +242,30 @@ class VisionNetworking:
                         else:
                             info[1] = self.resolution[0]
 
-                # Find the point with the least amount of distance to the center and output number.
-                if self.filterSide.value == "left":
-                    if filterPoints[0][1] < filterPoints[1][1]:
-                        self.trackingPoint = filterPoints[0][0]
+                # Find the intersection for all pairs of points.
+                if (filterPoints[0][0] != 0) or (filterPoints[1][0] != 0):
+                    # Find the point with the least amount of distance to the center and output number.
+                    if self.filterSide.value == "right":
+                        if filterPoints[0][1] > filterPoints[1][1]:
+                            self.trackingPoint = filterPoints[0][0]
+                            self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
+                        if filterPoints[1][1] > filterPoints[0][1]:
+                            self.trackingPoint = filterPoints[1][0]
+                            self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
+                    else:
+                        if filterPoints[0][1] < filterPoints[1][1]:
+                            self.trackingPoint = filterPoints[0][0]
+                            self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
+                        if filterPoints[1][1] < filterPoints[0][1]:
+                            self.trackingPoint = filterPoints[1][0]
+                            self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
+
+                    # If nothing is detect reset trackingPoint and PID.
+                    if (filterPoints[0][0] == 0) and (filterPoints[1][0] == 0):
+                        self.trackingPoint = self.resolution[0] / 2
                         self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                    if filterPoints[1][1] < filterPoints[0][1]:
-                        self.trackingPoint = filterPoints[1][0]
-                        self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                if self.filterSide.value == "right":
-                    if filterPoints[0][1] > filterPoints[1][1]:
-                        self.trackingPoint = filterPoints[0][0]
-                        self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                    if filterPoints[1][1] > filterPoints[0][1]:
-                        self.trackingPoint = filterPoints[1][0]
-                        self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                if self.filterSide.value == "center":
-                    if filterPoints[0][1] < filterPoints[1][1]:
-                        self.trackingPoint = filterPoints[0][0]
-                        self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                    if filterPoints[1][1] < filterPoints[0][1]:
-                        self.trackingPoint = filterPoints[1][0]
-                        self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
-                # Both of the points are zero default to center.
-                #if (0 in filterPoints[0]) and (0 in filterPoints[1]):
-                    #self.trackingPoint = self.resolution[0] / 2
-                    #self.NWTB.putNumber("VisionTrackingCenter", int(self.resolution[0] / 2)) 
+                        self.pid.set_auto_mode(False, last_output = 0)
+                    print "Tracking Point: " + str(self.trackingPoint)
 
             # Calculate the x and y joystick values for robot if in free mode.
             xCenter = 0
@@ -270,14 +286,14 @@ class VisionNetworking:
                 self.trackingPoint = xCenter
 
                 # Calculate joystick values.
-                joystickX , joystickY = self.convertToJoystick(self.trackingPoint, self.tolerance, self.minDistance, self.speedForward, self.speedForwardMultiplier, self.proportional, self.lidarDistances)
+                joystickX , joystickY = self.convertToJoystick(self.trackingPoint, self.tolerance, self.speedForward, self.turningSpeed, self.armActual)
                 # Put values in NetworkTables
                 self.NWTB.putNumber("VisionVirtualJoystickX", joystickX)
                 self.NWTB.putNumber("VisionVirtualJoystickY", joystickY)
 
             # Calculate the x and y joystick values for robot if in tape mode.
             if (self.mode == "tape"):
-                joystickX , joystickY = self.convertToJoystick(self.trackingPoint, self.tolerance, self.minDistance, self.speedForward, self.speedForwardMultiplier, self.proportional, self.lidarDistances)
+                joystickX , joystickY = self.convertToJoystick(self.trackingPoint, self.tolerance, self.speedForward, self.turningSpeed, self.armActual)
                 # Put values in NetworkTables
                 self.NWTB.putNumber("VisionVirtualJoystickX", joystickX)
                 self.NWTB.putNumber("VisionVirtualJoystickY", joystickY)
@@ -311,42 +327,27 @@ class VisionNetworking:
                 if (self.trackbarValues[2][1]) != self.trackbarData["tapeMode"]["vmx"]:
                     (self.trackbarValues[2][1]) = self.trackbarData["tapeMode"]["vmx"]
 
-            # Send telemtry data to webserver.
-            seconds = int(time.time())
-            if seconds % 2 == 0 and seconds != oldTime:
-                telemetryMode = open("/home/nvidia/Desktop/Values/Telemetry/mode.txt", "w")
-                telemetryMode.write(self.mode)
-                telemetrySpeed = open("/home/nvidia/Desktop/Values/Telemetry/speed.txt", "w")
-                telemetrySpeed.write(str(self.speed))
-                telemetryPointArray = open("/home/nvidia/Desktop/Values/Telemetry/pointarray.txt", "w")
-                telemetryPointArray.write(str(self.pointArray))
-                telemetryTrackbars = open("/home/nvidia/Desktop/Values/Telemetry/trackbarvalues.txt", "w")
-                telemetryTrackbars.write(str(self.trackbarValues))
-                telemetryAreaMin = open("/home/nvidia/Desktop/Values/Telemetry/areamin.txt", "w")
-                telemetryAreaMax = open("/home/nvidia/Desktop/Values/Telemetry/areamax.txt", "w")
-                if self.gui == "no":
-                    telemetryAreaMin.write(str(self.minArea.value))
-                    telemetryAreaMax.write(str(self.maxArea.value))
-                if self.gui == "yes":
-                    telemetryAreaMin.write(str(self.trackbarValues[3][0]))
-                    telemetryAreaMax.write(str(self.trackbarValues[3][1]))
-                oldTime = seconds
+            # If the object is lost, set a timeout and reset to center.
+            #seconds = time.time()
+            #if seconds - oldTime >= 0.02:
+                #self.trackingPoint = self.resolution[0] / 2
+                #oldTime = seconds
 
             # Print debug info if the gui is disabled.
-            if self.gui == "no":
-                print "Vision Camera Res: " + str(self.resolution[0]) + "x" + str(self.resolution[1])
-                print "Vision Mode: " + self.mode
-                print "Vision Area: " + str(self.area)
-                print "Vision Center: " + str(self.trackingPoint)
-                print "Vision Rotation: " + str(self.rotation)
-                print "Object Detected: " + str(self.objectDetected)
-                print "Vision Frequency: " + str(self.speed)
-                print "Vision JoystickXY: " + str(joystickX), str(joystickY)
-                print "Vision Point Array: " + str(self.pointArray[0]) + str(self.pointArray[1])
-                print "Vision Track-bar Values Array: " + str(self.trackbarValues)
+            #if self.gui == "no":
+                #print "Vision Camera Res: " + str(self.resolution[0]) + "x" + str(self.resolution[1])
+                #print "Vision Mode: " + self.mode
+                #print "Vision Area: " + str(self.area)
+                #print "Vision Center: " + str(self.trackingPoint)
+                #print "Vision Rotation: " + str(self.rotation)
+                #print "Object Detected: " + str(self.objectDetected)
+                #print "Vision Frequency: " + str(self.speed)
+                #print "Vision JoystickXY: " + str(joystickX), str(joystickY)
+                #print "Vision Point Array: " + str(self.pointArray[0]) + str(self.pointArray[1])
+                #print "Vision Track-bar Values Array: " + str(self.trackbarValues)
 
             # Add delay so it doesn't flood the network.
-            time.sleep(0.05)
+            time.sleep(0.02)
 
     def findIntersection(self,x1,y1,x2,y2,x3,y3,x4,y4):
         # Find intersection points of two lines.
@@ -354,81 +355,86 @@ class VisionNetworking:
             intersectPointX = 0
             intersectPointY = 0
         else:
+            # Find X.
             if (x1 < x3):
                 intersectPointX = ((x3 - x1) / 2) + x1
             else:
                 intersectPointX = ((x1 - x3) / 2) + x3
-            intersectPointY = ((((x2 * y1) - (x1 * y2)) * (y4 - y3)) - (((x4 * y3) - (x3 * y4)) * (y2 - y1))) / (((x2 - x1) * (y4 - y3)) - ((x4 - x3) * (y2 - y1)))
+            
+            # Find the equation of the line.
+            m = (y2 - y1) / (x2 - x1)
+            b = y1 - m * x1
+
+            # Find Y.
+            intersectPointY = (m * intersectPointX) + b
         return (intersectPointX, intersectPointY)
     
-    def convertToJoystick(self, objectCenter, tolerance, minDistance, speedForward, speedForwardMultiplier, proportional, lidarDistances):
+    def convertToJoystick(self, objectCenter, tolerance, speedForward, turningSpeed, armActual):
         # Create variables.
         cameraCenter = self.resolution[0] / 2
         tolerance = tolerance.value
-        minDistance = minDistance.value
+        armActual = armActual.value
         closestDistance = 5000
         speedForward = speedForward.value
-        speedForwardMultiplier = speedForwardMultiplier.value
-        proportional = proportional.value
+        turningSpeed = turningSpeed.value
         joystickX = 0
         joystickY = 0
         setpointLeft = 0
         setpointRight = 0
         errorLeft = 0
         errorRight = 0
-        gainLeft = 0
-        gainRight = 0
         
+        # Offset the center of the camera. (If the camera is not perfectly center)
+        cameraCenter += self.centerOffset.value        
+
         # Determine Setpoints depending on tolerance.
         setpointLeft = (cameraCenter - tolerance)
         setpointRight = (cameraCenter + tolerance)
+		
         # Calculate Error.
         errorLeft = (setpointLeft - objectCenter)
         errorRight = (objectCenter - setpointRight)
-        # Calculate Proportional Gain.
-        gainLeft = (proportional * errorLeft)
-        gainRight = (proportional * errorRight)
+        self.NWTB.putNumber("VisionErrorLeft", errorLeft)
+        self.NWTB.putNumber("VisionErrorRight", errorRight)
         
-        # Object is in the middle of the screen, don't turn.
-        if (objectCenter > setpointLeft and objectCenter < setpointRight):
-            joystickX = 0
+        # Get the P, I, D values from NetworkTables.
+        self.pid.tunings = (self.proportional.value, self.integral.value, self.derivative.value)
 
-        # Object is offset to the left, turn.
-        if (objectCenter < setpointLeft):
-            joystickX = ((gainLeft / setpointLeft) * -1)
-            
-            # Maximum turning speed of maxSpeed.
-            if (abs(joystickX) > speedForward):
-                joystickX = (speedForward * -1)
+        # Disable PID if vision is not being used.
+        if (self.visionIsActive.value == False):
+            self.pid.set_auto_mode(False, last_output = 0)
+            self.joystickX = 0
+            self.joystickY = 0
+        else:
+            # Use PID to determine output depending on errorLeft and errorRight.
+            if (objectCenter < setpointLeft):
+                self.pid.auto_mode = True
+                joystickX = self.pid(errorLeft)
+                joystickX = joystickX * -0.01
+            if (objectCenter > setpointRight):
+                self.pid.auto_mode = True
+                joystickX = self.pid(errorRight)
+                joystickX = joystickX * 0.01
+            if (objectCenter > (setpointLeft + self.centerOffset.value)) and (objectCenter < (setpointRight + self.centerOffset.value)):
+                self.pid.set_auto_mode(False, last_output = 0)
 
-        # Object is offset to the right, turn.
-        if (objectCenter > setpointRight):
-            joystickX = (gainRight / setpointRight)
-            
-            # Maximum turning speed of maxSpeed.
-            if (abs(joystickX) > speedForward):
-                joystickX = speedForward
+        # If the bucket is up then use the bottom camera and closest distance.
+        if (armActual < 65):
+            self.NWTB.putNumber("VisionCameraSource", 1)
+        # If the bucket is down then use the top camera and farthest distance.
+        if (armActual > 65):
+            self.NWTB.putNumber("VisionCameraSource", 2)
 
-        # Calculate forward speed depending on lidar distances.
-        for distance in lidarDistances:
-            if (distance.value < closestDistance):
-                if distance.value != 0:
-                    closestDistance = distance.value
-
-        joystickY = (minDistance - closestDistance) * speedForwardMultiplier
-
-        # If the object is close, set speed to zero.
-        if (closestDistance >= (minDistance - tolerance) and closestDistance <= (minDistance + tolerance)):
-            joystickY = 0
-
-        # Set max speed.
-        if (joystickY <= speedForward * -1):
-            joystickY = speedForward * -1
-        if (joystickY >= speedForward):
-            joystickY = speedForward 
-                
-        # Return the calculated inverted joystick values.
-        joystickX = joystickX * -1
+        # Set max speed for turning speed.
+        if (joystickX <= turningSpeed * -1):
+            joystickX = turningSpeed * -1
+        if (joystickX >= turningSpeed):
+            joystickX = turningSpeed
+		
+        # Set max forward speed.
+        joystickY = speedForward * -1
+        
+        # Return the calculated joystick values.
         return joystickX, joystickY
 
     def stop(self):
