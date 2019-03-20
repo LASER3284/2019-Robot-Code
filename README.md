@@ -1,5 +1,5 @@
 # Vision Processing
-Current working version of object tracking with the NVIDIA Jetson TX1 and Raspberry Pi 3. Also includes new version equiped
+Current working version of vision program with the NVIDIA Jetson TX1 and Raspberry Pi 3. Also includes new version equiped
 with multi-threading and a web interface for adjusting values on the fly. Built with Python 2.7 using OpenCV 3.3 libraries and [pynetworktables](https://github.com/robotpy/pynetworktables) with [monotonic](https://pypi.org/project/monotonic/#files).
 ## Other Folders:
 ###  Values:
@@ -23,7 +23,7 @@ Also note, if you want the vision program to autostart add the directory and com
   ![alt text](https://github.com/LASER3284/2019-Robot-Code/blob/vision/web_interface/Capture.PNG)
   ###### Vision Tuning Dashboard
 
-### Running Vision Tracking:
+### Running the Vision Program:
   To run the program make sure to `chmod a+x` the entire directory containing the vision files. This allows the program to access 
   the files storing the track-bar values. If you need help with the arguments to pass in just type: `sudo python VisionMain.py -h` (output is below.)
     
