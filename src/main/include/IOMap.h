@@ -19,7 +19,9 @@ const int nBucketIntakeSolenoid			=	3;		// Solenoid output for Hatch intake mech
 const int nBucketLinearSolenoid			=	4;		// Solenoid output for moving the Hatch Intake mech.		(off = disengaged)
 const int nBucketEjectSolenoid			=	5;		// Solenoid output for ejecting from the Hatch mech.		(off = disengaged)
 const int nLiftLockSolenoid				=	6;		// Solenoid output for locking the lift until endgame.		(off = engaged)
-const int nLiftStabilizerSolenoid		=	7;		// Solenoid output for stabilizing the lift.				(off = disengaged)
+const int nLiftShortSolenoid			=	7;		// Solenoid output for 1st HAB Zone lift.					(off = disengaged)
+const int nLiftHighClimbSolenoid1		=	6;		// Solenoid output for 2nd HAB Zone lift.					(kFowrard)
+const int nLiftHighClimbSolenoid2		=	7;		// Dumb solenoid output for 2nd HAB Zone lift.				(kReverse)
 
 // CAN Device IDs.
 const int nLeftDriveMotor1		  		=  	1;		// Spark Max ID for left drive motor 1
