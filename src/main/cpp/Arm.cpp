@@ -87,6 +87,8 @@ void CArm::Init()
     m_pArmMotor->Stop();
     // Reset encoder position.
     m_pArmMotor->ResetEncoderPosition();
+	// Set Arm to not back off of home.
+	m_pArmMotor->BackOffHome(false);
     // Clear sticky faults.
     m_pArmMotor->ClearStickyFaults();
 }

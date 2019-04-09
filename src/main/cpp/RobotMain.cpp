@@ -576,7 +576,7 @@ void CRobotMain::LiftStateMachine()
             // Print out Lift State.
 			SmartDashboard::PutString("Lift State", "Lift starting");
 			// Set Elevator speed.
-			m_pElevator->SetSpeed(-0.70, 0.70);
+			m_pElevator->SetSpeed(-0.70, 0.40);
             // Move elevator up to starting height.
             m_pElevator->SetSetpoint(dLiftStartHeight);
             // Change state.
