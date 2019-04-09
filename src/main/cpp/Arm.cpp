@@ -62,7 +62,7 @@ void CArm::Init()
     // Invert the encoder input.
     m_pArmMotor->SetSensorInverted(false);
     // Set the PID terms.
-    m_pArmMotor->SetPIDValues(dArmProportional, dArmIntegral, dArmDerivative);
+    m_pArmMotor->SetPIDValues(dArmProportional, dArmIntegral, dArmDerivative, dArmFeedForward);
     // Set positional limits.
     m_pArmMotor->SetSoftLimits(dArmMinPosition, dArmMaxPosition);
     // Set tolerance.
@@ -89,6 +89,10 @@ void CArm::Init()
     m_pArmMotor->ResetEncoderPosition();
 	// Set Arm to not back off of home.
 	m_pArmMotor->BackOffHome(false);
+	// Configure to use Motion Magic.
+	m_pArmMotor->UseMotionMagic(true);
+	m_pArmMotor->SetAcceleration(dArmMotionMagicAccel);
+	m_pArmMotor->SetCruiseRPM(dArmMotionMagicCruiseRPM);
     // Clear sticky faults.
     m_pArmMotor->ClearStickyFaults();
 }
@@ -158,7 +162,7 @@ void CArm::ManualMove(bool bUp)
 {
     if (m_pArmMotor->GetState() == eIdle)
 	{
-		// Set state to go Up or Down manually
+		// Set state to go Up or Down manually. Flipped for driver control and simplicity.
 		m_pArmMotor->SetState(bUp ? eManualReverse : eManualForward);
 	}
 }

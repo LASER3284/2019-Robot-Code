@@ -34,6 +34,7 @@ CCANPosition::CCANPosition(int nDeviceID)
 	m_bRevLimitSwitchNormallyOpen	= true;
 	m_bHomingComplete				= false;
 	m_bBackOffHome					= true;
+	m_bMotionMagic					= false;
 	m_dSetpoint						= 0.000;
 	m_nPulsesPerRev					= nDefaultCANPositionPulsesPerRev;
 	m_dRevsPerUnit					= dDefaultCANPositionRevsPerUnit;
@@ -141,10 +142,10 @@ void CCANPosition::Tick()
 				}
 				else
 				{
-					// Stop the motor and change the control mode to position.
-					m_pMotor->Set(ControlMode::Position, 0.000);
 					// Reset the encoder to zero.
 					m_pMotor->SetSelectedSensorPosition(0, nCANPositionPIDLoopIdx, nCANPositionTimeoutMs);
+					// Stop the motor and change the control mode to position.
+					m_pMotor->Set(ControlMode::Position, 0.000);
 					// Set flag that homing is complete.
 					m_bHomingComplete = true;
 					// Move to idle.
@@ -168,10 +169,10 @@ void CCANPosition::Tick()
 			if ((!IsRevLimitSwitchPressed()) ||
 				((m_dMaxHomingTime > 0.000) && (m_pTimer->Get() > (m_dHomingStartTime + m_dMaxHomingTime))))
 			{
-				// Stop the motor and change the control mode to position.
-				m_pMotor->Set(ControlMode::Position, 0.000);
 				// Reset the encoder to zero.
 				m_pMotor->SetSelectedSensorPosition(0, nCANPositionPIDLoopIdx, nCANPositionTimeoutMs);
+				// Stop the motor and change the control mode to position.
+				m_pMotor->Set(ControlMode::Position, 0.000);
 				// Set flag that homing is complete.
 				m_bHomingComplete = true;
 				// Set the state to eIdle.
@@ -265,7 +266,14 @@ void CCANPosition::SetSetpoint(double dPosition)
 	m_dFindingStartTime = m_pTimer->Get();
 
 	// Set the motor to the desired position.
-	m_pMotor->Set(ControlMode::Position, (dPosition * m_dRevsPerUnit * m_nPulsesPerRev));
+	if (m_bMotionMagic)
+	{
+		m_pMotor->Set(ControlMode::MotionMagic, (dPosition * m_dRevsPerUnit * m_nPulsesPerRev));
+	}
+	else
+	{
+		m_pMotor->Set(ControlMode::Position, (dPosition * m_dRevsPerUnit * m_nPulsesPerRev));
+	}
 
 	printf("CCANPosition::SetSetpoint - Setpoint = %7.3f\n", dPosition);
 	printf("CCANPosition::SetSetpoint - Revs Per Unit = %7.3f\n", m_dRevsPerUnit);
@@ -652,5 +660,29 @@ void CCANPosition::SetManualSpeed(double dForward, double dReverse)
 {
 	m_dFwdMoveSpeed = dForward;
 	m_dRevMoveSpeed = dReverse;
+}
+
+/******************************************************************************
+	Description:	SetAcceleration - Set the Motion Magic Acceleration.
+
+	Arguments:	 	double dRPS
+
+	Returns: 		Nothing
+******************************************************************************/
+void CCANPosition::SetAcceleration(double dRPS)
+{
+	m_pMotor->ConfigMotionAcceleration(dRPS);
+}
+
+/******************************************************************************
+	Description:	SetCruiseRPM - Set the Motion Magic Cruise RPM.
+
+	Arguments:	 	double dRPM
+
+	Returns: 		Nothing
+******************************************************************************/
+void CCANPosition::SetCruiseRPM(double dRPM)
+{
+	m_pMotor->ConfigMotionCruiseVelocity(dRPM);
 }
 ///////////////////////////////////////////////////////////////////////////////

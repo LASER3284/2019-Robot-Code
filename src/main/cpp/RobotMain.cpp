@@ -204,9 +204,9 @@ void CRobotMain::TeleopInit()
 {
 	// Enable Joystick Control.
 	m_pDrive->SetJoystickControl(true);
-	// Make sure the Cylinders are retracted.
-	m_pElevator->ToggleShortLift1(false);
-	m_pElevator->ToggleStabilizer1(false);
+	// Make sure the Cylinders are retracted (if they are extended for whatever reason)
+	m_pElevator->EnableShortLift(false);
+	m_pElevator->EnableStabilizer(false);
 	// On Init, reset state machine to Idle.
 	m_nTeleopState = eTeleopIdle;
 	m_nLiftState   = eLiftIdle;
@@ -645,7 +645,7 @@ void CRobotMain::LiftStateMachine()
 			if ((fabs(m_pDriveController->GetRawAxis(5)) >= 0.15) && bCylinderFired == false)
 			{
 				bCylinderFired = true;
-				m_pElevator->ToggleStabilizer1(true);
+				m_pElevator->EnableStabilizer(true);
 			}
 
 			if (m_pElevator->IsLiftSensorHit())
@@ -661,7 +661,9 @@ void CRobotMain::LiftStateMachine()
 			// Print out Lift State.
             SmartDashboard::PutString("Lift State", "Lift Raising");
 			// Wait for arm to be at setpoint, and sensor is still hit after timeout.
-			if (m_pArm->IsReady() && (m_pTimer->Get() >= (m_dDelayStartTime + SmartDashboard::GetNumber("Lift Sensor Timeout", 0.3))) && m_pElevator->IsLiftSensorHit())
+			if ((m_pArm->IsReady()) &&
+				(m_pTimer->Get() >= (m_dDelayStartTime + SmartDashboard::GetNumber("Lift Sensor Timeout", 0.3))) && 
+				(m_pElevator->IsLiftSensorHit()))
 			{
 				// Stop Lift Drive.
 				m_pElevator->LiftDrive(0.0);
@@ -680,7 +682,7 @@ void CRobotMain::LiftStateMachine()
 					// Stop drive completely.
 					m_pDrive->ManualDrive(0.0, 0.0);
 					// Raise cylinder.
-					m_pElevator->ToggleStabilizer1(false);
+					m_pElevator->EnableStabilizer(false);
 					// Start timer.
 					m_dDelayStartTime = m_pTimer->Get();
 					// Move state.

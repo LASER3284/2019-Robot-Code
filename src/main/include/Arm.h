@@ -30,9 +30,12 @@ const double dArmTolerance			=		1.0;			// Positional Tolerance.
 const double dArmProportional		=		7.0;			// Proportional Gain.
 const double dArmIntegral			=		0.0;			// Integral Gain.
 const double dArmDerivative			=		0.0;			// Derivative Gain.
+const double dArmFeedForward		=	  3.121;			// Feed Forward.
 const double dArmAccumIZone			=	   15.0;			// Accumulative I Zone.
 const double dArmFindingTimeout		=	    3.0;			// Max Finding Time.
 const double dArmHomingTimeout		=		3.0;			// Max Homing Time.
+const double dArmMotionMagicAccel	=	   50.0;			// Acceleration for Motion Magic in RPS.
+const double dArmMotionMagicCruiseRPM  = 19.238;			// Cruise RPM for Motion Magic.
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -30,9 +30,12 @@ const double dElevatorTolerance			=		1.7;						// Positional Tolerance.
 const double dElevatorProportional		=		0.92;						// Proportional Gain.
 const double dElevatorIntegral			=		0.0;						// Integral Gain.
 const double dElevatorDerivative		=		0.0;						// Derivative Gain.
+const double dElevatorFeedForward		= 	  1.142;						// Feed Forward.
 const double dElevatorAccumIZone		=	   15.0;						// Accumulative I Zone.
 const double dElevatorFindingTimeout	=	    7.0;						// Max Finding Time.
 const double dElevatorHomingTimeout		=		5.0;						// Max Homing Time.
+const double dElevatorMotionMagicAccel	=	 1525.0;						// Acceleration for Motion Magic in RPS.
+const double dElevatorMotionMagicCruiseRPM	= 525.0;						// Cruise RPM for Motion Magic.
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -42,24 +45,22 @@ public:
 	// Prototypes.
 	CElevator();
 	~CElevator();
-	// Methods.
+	// Elevator Specific methods.
 	void Init();
 	void Tick();
 	void SetSetpoint(double dSetpoint);
 	void ManualMove(bool bUp);
-	void LiftDrive(double dPercent);
-	void TestLiftDrive(double dPercent);
-	void EngageLift(bool bEnabled);
-	void TestBrake();
-	void ToggleShortLift();
-	void ToggleShortLift1(bool bEnabled);
-	void ToggleStabilizer();
-	void ToggleStabilizer1(bool bEnabled);
 	void Stop();
 	void SetSpeed(double dMinimum, double dMaximum);
-	void FinishDrive();
+	// Lifting methods.
+	void EngageLift(bool bEnabled);
+	void ToggleShortLift();
+	void EnableShortLift(bool bEnabled);
+	void ToggleStabilizer();
+	void EnableStabilizer(bool bEnabled);
+	void LiftDrive(double dPercent);
 	// One line methods.
-	void BackOffHome(bool bBackOff)					{	m_pElevator1->BackOffHome(bBackOff);					};
+	void BackOffHome(bool bBackOff)					{	m_pElevator1->BackOffHome(bBackOff);			};
 	bool IsReady()									{	return m_pElevator1->IsReady(); 				};
 	bool IsHomingComplete()							{	return m_pElevator1->IsHomingComplete();		};
 	double GetSetpoint()							{ 	return m_pElevator1->GetSetpoint();				};
@@ -71,6 +72,9 @@ public:
 	bool IsRevLimitSwitchPressed()					{	return m_pElevator1->IsRevLimitSwitchPressed();	};
 	bool IsLiftSensorHit()							{	return !m_pLiftSensor->Get();					};
 	bool IsStabilizerSensorHit()					{	return !m_pStabilizerSensor->Get();				};
+	// Testing only methods.
+	void TestLiftDrive(double dPercent);
+	void TestBrake();
 
 private:
 	// Private objects.
