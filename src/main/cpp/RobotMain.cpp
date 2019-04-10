@@ -716,7 +716,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Shift Gears (LS Toggle)
 	********************************************************************/
-	// Check to see if the Left Analog Button was pressed. (Toggles the drive shift solenoid from low to high gear).
+	// Check to see if the Left Analog Stick was pressed.
 	if (m_pDriveController->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
 	{
 		m_bDriveControllerButtonLSPressed = true;
@@ -747,7 +747,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Move to Cargo Pickup position (RB Press)
 	********************************************************************/
-	// Check to see if RB Button was pressed
+	// Check to see if Right Bumper was pressed
 	if (m_pDriveController->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
 	{
 		m_bDriveControllerButtonRBPressed = true;
@@ -765,7 +765,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Move to Hatch Pickup position (LB Press)
 	********************************************************************/
-	// Check to see if LB Button was pressed
+	// Check to see if Left Bumper was pressed
 	if (m_pDriveController->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
 	{
 		m_bDriveControllerButtonLBPressed = true;
@@ -884,9 +884,9 @@ void CRobotMain::TeleopPeriodic()
 	}
 
 	/********************************************************************
-		Drive Controller - Enable Short Lift.
+		Drive Controller - Enable Short Lift. (Y Press)
 	********************************************************************/
-		// Check to see if Y Button is pressed.
+	// Check to see if Y Button is pressed.
 	if (m_pDriveController->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
 	{
 		m_bDriveControllerButtonYPressed = true;
@@ -904,7 +904,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch low position (LB Press)
 	********************************************************************/
-	// Check to see if A Button was pressed
+	// Check to see if Left Bumper was pressed
 	if (m_pAuxController->GetRawButton(eButtonLB) && !m_bAuxControllerButtonAPressed)
 	{
 		m_bAuxControllerButtonLBPressed = true;
@@ -922,7 +922,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch mid position (X Press)
 	********************************************************************/
-	// Check to see if B Button was pressed
+	// Check to see if X Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonX) && !m_bAuxControllerButtonXPressed)
 	{
 		m_bAuxControllerButtonXPressed = true;
@@ -940,7 +940,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch high position (RB Press)
 	********************************************************************/
-	// Check to see if Y Button was pressed
+	// Check to see if Right Bumper was pressed
 	if (m_pAuxController->GetRawButton(eButtonRB) && !m_bAuxControllerButtonRBPressed)
 	{
 		m_bAuxControllerButtonRBPressed = true;
@@ -958,7 +958,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo low position (A Press)
 	********************************************************************/
-	// Check to see if LB Button was pressed
+	// Check to see if A Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonA) && !m_bAuxControllerButtonAPressed)
 	{
 		m_bAuxControllerButtonAPressed = true;
@@ -976,7 +976,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo mid position (B Press)
 	********************************************************************/
-	// Check to see if X Button was pressed
+	// Check to see if B Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonB) && !m_bAuxControllerButtonBPressed)
 	{
 		m_bAuxControllerButtonBPressed = true;
@@ -994,7 +994,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo high position (Y Press)
 	********************************************************************/
-	// Check to see if RB Button was pressed
+	// Check to see if Y Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonY) && !m_bAuxControllerButtonYPressed)
 	{
 		m_bAuxControllerButtonYPressed = true;
