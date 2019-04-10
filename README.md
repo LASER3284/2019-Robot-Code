@@ -14,25 +14,21 @@ with multi-threading and a web interface for adjusting values on the fly. Built 
   to organize and store track-bar values.
 ###  Overclocking:
   This folder contains files that need to replace other files on the filesystem of the Raspberry Pi.
-  Replace the config.txt in the `/boot/` directory and place the other files on the desktop(this is the overclocking settings).
-  Make sure to add cpu_governor.sh to autostart in `/etc/rc.local` file (remove CPU throttling).
+  Replace the config.txt in the `/boot/` directory and place the other files on the desktop (this is the overclocking settings).
+  Make sure to add cpu_governor.sh to autostart in the `/etc/rc.local` file (remove CPU throttling).
     
 Also note, if you want the vision program to autostart add the directory and command to start it to the rc.local in `/etc/`.
 
 ###  How to Setup the Web Interface
-  First, a webserver such as Apache2 or NGINX needs to be installed on your linux machine. We use Apache2 as it is relatively simple
-  and fast to setup. To install Apache open a terminal and type: `sudo apt install apache2`. After the installation completes drop
-  the contents of `web_interface` into `/var/www/html` and reboot the linux machine. 
+First, a webserver such as Apache2 or NGINX needs to be installed on your linux machine. We use Apache2 as it is relatively simple and fast to setup. To install Apache open a terminal and type: `sudo apt install apache2`. After the installation completes, drop the contents of `web_interface` into `/var/www/html` and reboot. 
   
-  To visit the website type the hostname of your computer or its IP address. For example, if your useing a raspberry pi you
-  could type `raspberrypi.local`.
+To visit the website type the hostname of your computer or it's IP address. For example, if your using a Raspberry Pi, you could use `raspberrypi.local`.
   
-  ![alt text](https://github.com/LASER3284/2019-Robot-Code/blob/vision/web_interface/Capture.PNG)
-  ###### Vision Tuning Dashboard
+![alt text](https://github.com/LASER3284/2019-Robot-Code/blob/vision/web_interface/Capture.PNG)
+###### Vision Tuning Dashboard
 
 ### Running Vision Tracking:
-  To run the program make sure to `chmod a+x` the entire directory containing the vision files. This allows the program to access 
-  the files storing the track-bar values. If you need help with the arguments to pass in just type: `sudo python VisionMain.py -h` (output is below.)
+To run the program, make sure to `chmod a+x` the entire directory containing the vision files. This allows the program to access the files storing the track-bar values. If you need help with the arguments to pass in just type: `sudo python VisionMain.py -h` (output is below.)
     
 ```console
 usage: VisionMain.py [-h] [--source SOURCE] [--thread THREAD] [--gui GUI]
