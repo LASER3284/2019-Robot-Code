@@ -116,6 +116,8 @@ void CRobotMain::RobotInit()
 	m_pBucket->Init();
 	// Start timer.
 	m_pTimer->Start();
+	// Set SmartDashboard variable.
+	SmartDashboard::PutNumber("Lift Sensor Timeout", 0.3);
 }
 
 /******************************************************************************
@@ -202,6 +204,9 @@ void CRobotMain::TeleopInit()
 {
 	// Enable Joystick Control.
 	m_pDrive->SetJoystickControl(true);
+	// Make sure the Cylinders are retracted.
+	m_pElevator->ToggleShortLift1(false);
+	m_pElevator->ToggleStabilizer1(false);
 	// On Init, reset state machine to Idle.
 	m_nTeleopState = eTeleopIdle;
 	m_nLiftState   = eLiftIdle;
@@ -571,7 +576,7 @@ void CRobotMain::LiftStateMachine()
             // Print out Lift State.
 			SmartDashboard::PutString("Lift State", "Lift starting");
 			// Set Elevator speed.
-			m_pElevator->SetSpeed(-0.70, 0.70);
+			m_pElevator->SetSpeed(-0.70, 0.40);
             // Move elevator up to starting height.
             m_pElevator->SetSetpoint(dLiftStartHeight);
             // Change state.
@@ -625,6 +630,7 @@ void CRobotMain::LiftStateMachine()
 			SmartDashboard::PutString("Lift State", "Lift Stabilizer");
 			if (m_pElevator->IsReady())
 			{
+
 				// Change state.
 				m_nLiftState = eLift6;
 			}
@@ -639,13 +645,13 @@ void CRobotMain::LiftStateMachine()
 			if ((fabs(m_pDriveController->GetRawAxis(5)) >= 0.15) && bCylinderFired == false)
 			{
 				bCylinderFired = true;
-				m_pElevator->EnableStabilizer();
+				m_pElevator->ToggleStabilizer1(true);
 			}
 
 			if (m_pElevator->IsLiftSensorHit())
-			{
-				// Stop Lift Drive.
-				m_pElevator->LiftDrive(0.0);
+			{	
+				// Get Timer.
+				m_dDelayStartTime = m_pTimer->Get();
 				// Change state.
 				m_nLiftState = eLift7;
 			}
@@ -654,9 +660,11 @@ void CRobotMain::LiftStateMachine()
         case eLift7 :
 			// Print out Lift State.
             SmartDashboard::PutString("Lift State", "Lift Raising");
-			// Wait for arm to be at setpoint.
-			if (m_pArm->IsReady())
+			// Wait for arm to be at setpoint, and sensor is still hit after timeout.
+			if (m_pArm->IsReady() && (m_pTimer->Get() >= (m_dDelayStartTime + SmartDashboard::GetNumber("Lift Sensor Timeout", 0.3))) && m_pElevator->IsLiftSensorHit())
 			{
+				// Stop Lift Drive.
+				m_pElevator->LiftDrive(0.0);
 				// Move elevator back up.
 				m_pElevator->SetSetpoint(dLiftEndHeight);
 				// Move to next state.
@@ -672,7 +680,7 @@ void CRobotMain::LiftStateMachine()
 					// Stop drive completely.
 					m_pDrive->ManualDrive(0.0, 0.0);
 					// Raise cylinder.
-					m_pElevator->EnableStabilizer();
+					m_pElevator->ToggleStabilizer1(false);
 					// Start timer.
 					m_dDelayStartTime = m_pTimer->Get();
 					// Move state.
@@ -708,7 +716,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Shift Gears (LS Toggle)
 	********************************************************************/
-	// Check to see if the Left Analog Button was pressed. (Toggles the drive shift solenoid from low to high gear).
+	// Check to see if the Left Analog Stick was pressed.
 	if (m_pDriveController->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
 	{
 		m_bDriveControllerButtonLSPressed = true;
@@ -739,7 +747,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Move to Cargo Pickup position (RB Press)
 	********************************************************************/
-	// Check to see if RB Button was pressed
+	// Check to see if Right Bumper was pressed
 	if (m_pDriveController->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
 	{
 		m_bDriveControllerButtonRBPressed = true;
@@ -757,7 +765,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Drive Controller - Move to Hatch Pickup position (LB Press)
 	********************************************************************/
-	// Check to see if LB Button was pressed
+	// Check to see if Left Bumper was pressed
 	if (m_pDriveController->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
 	{
 		m_bDriveControllerButtonLBPressed = true;
@@ -876,14 +884,14 @@ void CRobotMain::TeleopPeriodic()
 	}
 
 	/********************************************************************
-		Drive Controller - Toggle Lift Cylinder (Y Press)
+		Drive Controller - Enable Short Lift. (Y Press)
 	********************************************************************/
-		// Check to see if B Button is pressed.
+	// Check to see if Y Button is pressed.
 	if (m_pDriveController->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
 	{
 		m_bDriveControllerButtonYPressed = true;
-		// Toggle Lift solenoid.
-		m_pElevator->EnableStabilizer();
+		// Toggle Solenoid
+		m_pElevator->ToggleShortLift();
 	}
 	else
 	{
@@ -896,7 +904,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch low position (LB Press)
 	********************************************************************/
-	// Check to see if A Button was pressed
+	// Check to see if Left Bumper was pressed
 	if (m_pAuxController->GetRawButton(eButtonLB) && !m_bAuxControllerButtonAPressed)
 	{
 		m_bAuxControllerButtonLBPressed = true;
@@ -914,7 +922,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch mid position (X Press)
 	********************************************************************/
-	// Check to see if B Button was pressed
+	// Check to see if X Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonX) && !m_bAuxControllerButtonXPressed)
 	{
 		m_bAuxControllerButtonXPressed = true;
@@ -932,7 +940,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Hatch high position (RB Press)
 	********************************************************************/
-	// Check to see if Y Button was pressed
+	// Check to see if Right Bumper was pressed
 	if (m_pAuxController->GetRawButton(eButtonRB) && !m_bAuxControllerButtonRBPressed)
 	{
 		m_bAuxControllerButtonRBPressed = true;
@@ -950,7 +958,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo low position (A Press)
 	********************************************************************/
-	// Check to see if LB Button was pressed
+	// Check to see if A Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonA) && !m_bAuxControllerButtonAPressed)
 	{
 		m_bAuxControllerButtonAPressed = true;
@@ -968,7 +976,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo mid position (B Press)
 	********************************************************************/
-	// Check to see if X Button was pressed
+	// Check to see if B Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonB) && !m_bAuxControllerButtonBPressed)
 	{
 		m_bAuxControllerButtonBPressed = true;
@@ -986,7 +994,7 @@ void CRobotMain::TeleopPeriodic()
 	/********************************************************************
 		Aux Controller - Move to Cargo high position (Y Press)
 	********************************************************************/
-	// Check to see if RB Button was pressed
+	// Check to see if Y Button was pressed
 	if (m_pAuxController->GetRawButton(eButtonY) && !m_bAuxControllerButtonYPressed)
 	{
 		m_bAuxControllerButtonYPressed = true;
@@ -1390,7 +1398,7 @@ void CRobotMain::TestPeriodic()
 	// Check to see if Right Stick was pressed
 	if (m_pDriveController->GetRawButton(eButtonRS) && !m_bDriveControllerButtonRSPressed)
 	{
-		m_pElevator->EnableStabilizer();
+		m_pElevator->ToggleStabilizer();
 		m_bDriveControllerButtonRSPressed = true;
 	}
 	else

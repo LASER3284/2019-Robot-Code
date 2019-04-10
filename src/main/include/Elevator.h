@@ -51,7 +51,10 @@ public:
 	void TestLiftDrive(double dPercent);
 	void EngageLift(bool bEnabled);
 	void TestBrake();
-	void EnableStabilizer();
+	void ToggleShortLift();
+	void ToggleShortLift1(bool bEnabled);
+	void ToggleStabilizer();
+	void ToggleStabilizer1(bool bEnabled);
 	void Stop();
 	void SetSpeed(double dMinimum, double dMaximum);
 	void FinishDrive();
@@ -76,11 +79,13 @@ private:
 	WPI_TalonSRX*	m_pLiftDrive;
 	Solenoid*	  	m_pElevatorBrake;
 	Solenoid*		m_pLiftLock;
-	Solenoid*		m_pStabilizer;
+	Solenoid*		m_pShortLift;
+	DoubleSolenoid*	m_pStabilizer;
 	DigitalInput*	m_pStabilizerSensor;
 	DigitalInput*	m_pLiftSensor;
 	Timer*			m_pTimer;
 	double			m_dDelayStartTime;
+	bool			m_bStabilizerExt;
 };
 /////////////////////////////////////////////////////////////////////////////
 #endif

@@ -27,12 +27,14 @@ CElevator::CElevator()
     m_pLiftDrive        = new WPI_TalonSRX(nLiftDriveMotor);
     m_pElevatorBrake    = new Solenoid(nPCM1, nElevatorBrakeSolenoid);
     m_pLiftLock 		= new Solenoid(nPCM1, nLiftLockSolenoid);
-	m_pStabilizer		= new Solenoid(nPCM1, nLiftStabilizerSolenoid);
+    m_pShortLift        = new Solenoid(nPCM1, nLiftShortSolenoid);
+	m_pStabilizer		= new DoubleSolenoid(nPCM2, nLiftHighClimbSolenoid1, nLiftHighClimbSolenoid2);
     m_pLiftSensor       = new DigitalInput(nLiftSensor);
     m_pStabilizerSensor = new DigitalInput(nLiftStabilizerSensor);
     m_pTimer            = new Timer();
 
     m_dDelayStartTime   = 0.0;
+    m_bStabilizerExt    = false;
 }
 
 /****************************************************************************
@@ -50,6 +52,7 @@ CElevator::~CElevator()
     delete m_pLiftDrive;
     delete m_pElevatorBrake;
     delete m_pLiftLock;
+    delete m_pShortLift;
     delete m_pStabilizer;
     delete m_pTimer;
     delete m_pLiftSensor;
@@ -59,7 +62,8 @@ CElevator::~CElevator()
     m_pElevator2 		= nullptr;
     m_pLiftDrive        = nullptr;
     m_pElevatorBrake	= nullptr;
-    m_pLiftLock         = nullptr;	
+    m_pLiftLock         = nullptr;
+    m_pShortLift        = nullptr;
     m_pStabilizer       = nullptr;
     m_pTimer            = nullptr;
     m_pLiftSensor       = nullptr;
@@ -274,16 +278,63 @@ void CElevator::TestBrake()
 	m_pElevatorBrake->Set(!m_pElevatorBrake->Get());
 }
 
+void CElevator::ToggleShortLift()
+{
+    // Toggle Solenoid.
+    m_pShortLift->Set(!m_pShortLift->Get());
+}
+
+void CElevator::ToggleShortLift1(bool bEnabled)
+{
+    // Toggle Solenoid.
+    m_pShortLift->Set(bEnabled);
+}
+
 /****************************************************************************
-	Description:	EnableStabilizer - Toggle stabilizer solenoid.
+	Description:	ToggleStabilizer - Toggle stabilizer solenoid.
+
+	Arguments: 		None
+
+	Returns: 		Nothing
+****************************************************************************/
+void CElevator::ToggleStabilizer()
+{
+    // Invert when called.
+    m_bStabilizerExt = !m_bStabilizerExt;
+
+    // Set double solenoid as forward or reverse.
+    if (m_bStabilizerExt)
+    {
+        m_pStabilizer->Set(DoubleSolenoid::Value::kForward);
+    }
+    else
+    {
+        m_pStabilizer->Set(DoubleSolenoid::Value::kReverse);
+    }
+    // Set solenoid.
+/// m_pStabilizer->Set(bEnabled);
+}
+
+/****************************************************************************
+	Description:	ToggleStabilzer - Enable or disable stabilizer
+                                       solenoid.
 
 	Arguments: 		bool bEnabled
 
 	Returns: 		Nothing
 ****************************************************************************/
-void CElevator::EnableStabilizer()
+void CElevator::ToggleStabilizer1(bool bEnabled)
 {
-    // Set solenoids.
-    m_pStabilizer->Set(!m_pStabilizer->Get());
+    m_bStabilizerExt = bEnabled;
+    if (m_bStabilizerExt)
+    {
+        // Extend the Cylinder.
+        m_pStabilizer->Set(DoubleSolenoid::Value::kForward);
+    }
+    else
+    {
+        // Retract the Cylinder.
+        m_pStabilizer->Set(DoubleSolenoid::Value::kReverse);
+    }
 }
 /////////////////////////////////////////////////////////////////////////////

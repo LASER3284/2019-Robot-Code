@@ -21,9 +21,9 @@ class CVision;
 using namespace frc;
 
 // Teleop Constants.
-const double dElevatorCargoLowSetpoint 	= 2.50;
-const double dElevatorCargoMidSetpoint	= 30.5;
-const double dElevatorCargoHighSetpoint = 59.0;
+const double dElevatorCargoLowSetpoint 	= 2.0;
+const double dElevatorCargoMidSetpoint	= 28.0;
+const double dElevatorCargoHighSetpoint = 54.8;
 const double dElevatorCargoShipSetpoint = 17.4;
 const double dElevatorCargoFeederSetpoint	= 17.0;
 const double dArmCargoFloorSetpoint		= 84.0;
@@ -32,14 +32,14 @@ const double dArmCargoMidSetpoint		= 0.00;
 const double dArmCargoHighSetpoint		= 0.00;
 const double dArmCargoShipSetpoint		= 0.00;
 const double dElevatorHatchLowSetpoint	= 0.00;
-const double dElevatorHatchMidSetpoint	= 10.4;
-const double dElevatorHatchHighSetpoint = 39.5;
+const double dElevatorHatchMidSetpoint	= 8.54;
+const double dElevatorHatchHighSetpoint = 37.39;
 const double dArmHatchLowSetpoint		= 84.0;
 const double dArmHatchMidSetpoint		= 0.00;
 const double dArmHatchHighSetpoint		= 0.00;
-const double dLiftArmSetpoint			= 83.5;			// here
+const double dLiftArmSetpoint			= 86.0;			// here
 const double dLiftStartHeight			= 20.5;			// here
-const double dLiftEndHeight				= 25.0;
+const double dLiftEndHeight				= 24.5;
 const double dLiftFinishDelay			= 5.00;
 const double dLiftStabilizerEngage		= 10.0;
 const double dLiftLidarDistance			= 400.0;
