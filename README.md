@@ -3,8 +3,6 @@ Robot Code from the 2019 season, Destination: Deep Space.
 ## Branches
 **"master" branch** contains most development and changes. All other branches should be forked from master.
 <br>
-**"release" branch** contains the most current _stable_ code. This code should be tested thoroughly and working.
-<br>
 **"vision" branch** contains our Vision code for running on the Jetson TX1 for 2019.
 <br>
 # Vision Processing
