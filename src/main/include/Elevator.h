@@ -25,16 +25,16 @@ const double dElevatorMaxSpeed			=  	    1.0;						// Max Finding Speed.
 const double dElevatorMinSpeed			=  	   -1.0;						// Min Finding Speed.
 const double dElevatorMaxPosition		=  	   62.5;						// Max Distance.
 const double dElevatorMinPosition		=  	    0.0;						// Min Distance.
-const double dElevatorRampRate			=		0.5;						// Closed Loop Ramp Rate.
-const double dElevatorTolerance			=		1.7;						// Positional Tolerance.
-const double dElevatorProportional		=		0.92;						// Proportional Gain.
+const double dElevatorRampRate			=		0.3;						// Closed Loop Ramp Rate.
+const double dElevatorTolerance			=		1.2;						// Positional Tolerance.
+const double dElevatorProportional		=		0.6;						// Proportional Gain.
 const double dElevatorIntegral			=		0.0;						// Integral Gain.
-const double dElevatorDerivative		=		0.0;						// Derivative Gain.
+const double dElevatorDerivative		=	   4.56;						// Derivative Gain.
 const double dElevatorFeedForward		= 	  1.142;						// Feed Forward.
 const double dElevatorAccumIZone		=	   15.0;						// Accumulative I Zone.
 const double dElevatorFindingTimeout	=	    7.0;						// Max Finding Time.
 const double dElevatorHomingTimeout		=		5.0;						// Max Homing Time.
-const double dElevatorMotionMagicAccel	=	 1525.0;						// Acceleration for Motion Magic in RPS.
+const double dElevatorMotionMagicAccel	=	 1875.0;						// Acceleration for Motion Magic in RPM.
 const double dElevatorMotionMagicCruiseRPM	= 525.0;						// Cruise RPM for Motion Magic.
 /////////////////////////////////////////////////////////////////////////////
 
