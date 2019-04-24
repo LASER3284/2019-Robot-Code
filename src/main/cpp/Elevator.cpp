@@ -89,7 +89,7 @@ void CElevator::Init()
     // Invert the encoder input.
     m_pElevator1->SetSensorInverted(false);
     // Set the PID terms.
-    m_pElevator1->SetPIDValues(dElevatorProportional, dElevatorIntegral, dElevatorDerivative);
+    m_pElevator1->SetPIDValues(dElevatorProportional, dElevatorIntegral, dElevatorDerivative, dElevatorFeedForward);
     // Set positional limits.
     m_pElevator1->SetSoftLimits(dElevatorMinPosition, dElevatorMaxPosition);
     // Set tolerance.
@@ -116,6 +116,10 @@ void CElevator::Init()
     m_pElevator1->Stop();
     // Reset encoder position.
     m_pElevator1->ResetEncoderPosition();
+	// Configure to use Motion Magic.
+	m_pElevator1->UseMotionMagic(true);
+	m_pElevator1->SetAcceleration(dElevatorMotionMagicAccel);
+	m_pElevator1->SetCruiseRPM(dElevatorMotionMagicCruiseRPM);
     // Clear sticky faults.
     m_pElevator1->ClearStickyFaults();
     m_pLiftDrive->ClearStickyFaults();
@@ -278,13 +282,27 @@ void CElevator::TestBrake()
 	m_pElevatorBrake->Set(!m_pElevatorBrake->Get());
 }
 
+/****************************************************************************
+	Description:	ToggleShortLift - Toggle Short Lifting cylinder.
+
+	Arguments: 		None
+
+	Returns: 		Nothing
+****************************************************************************/
 void CElevator::ToggleShortLift()
 {
     // Toggle Solenoid.
     m_pShortLift->Set(!m_pShortLift->Get());
 }
 
-void CElevator::ToggleShortLift1(bool bEnabled)
+/****************************************************************************
+	Description:	EnableShortLift - Enable Short Lifting cylinder.
+
+	Arguments: 		bool bEnabled
+
+	Returns: 		Nothing
+****************************************************************************/
+void CElevator::EnableShortLift(bool bEnabled)
 {
     // Toggle Solenoid.
     m_pShortLift->Set(bEnabled);
@@ -316,14 +334,14 @@ void CElevator::ToggleStabilizer()
 }
 
 /****************************************************************************
-	Description:	ToggleStabilzer - Enable or disable stabilizer
-                                       solenoid.
+	Description:	EnableStabilzer - Enable or disable stabilizer
+                                      solenoid.
 
 	Arguments: 		bool bEnabled
 
 	Returns: 		Nothing
 ****************************************************************************/
-void CElevator::ToggleStabilizer1(bool bEnabled)
+void CElevator::EnableStabilizer(bool bEnabled)
 {
     m_bStabilizerExt = bEnabled;
     if (m_bStabilizerExt)

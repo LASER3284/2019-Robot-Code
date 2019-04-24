@@ -204,9 +204,9 @@ void CRobotMain::TeleopInit()
 {
 	// Enable Joystick Control.
 	m_pDrive->SetJoystickControl(true);
-	// Make sure the Cylinders are retracted.
-	m_pElevator->ToggleShortLift1(false);
-	m_pElevator->ToggleStabilizer1(false);
+	// Make sure the Cylinders are retracted (if they are extended for whatever reason)
+	m_pElevator->EnableShortLift(false);
+	m_pElevator->EnableStabilizer(false);
 	// On Init, reset state machine to Idle.
 	m_nTeleopState = eTeleopIdle;
 	m_nLiftState   = eLiftIdle;
@@ -645,34 +645,45 @@ void CRobotMain::LiftStateMachine()
 			if ((fabs(m_pDriveController->GetRawAxis(5)) >= 0.15) && bCylinderFired == false)
 			{
 				bCylinderFired = true;
-				m_pElevator->ToggleStabilizer1(true);
-			}
-
-			if (m_pElevator->IsLiftSensorHit())
-			{	
-				// Get Timer.
-				m_dDelayStartTime = m_pTimer->Get();
+				m_pElevator->EnableStabilizer(true);
 				// Change state.
 				m_nLiftState = eLift7;
 			}
             break;
 
-        case eLift7 :
+		case eLift7 :
+			// Print out Lift State.
+			SmartDashboard::PutString("Lift State", "Lift Checking Sensor");
+			// Start Lift Drive on Right Stick Y.
+            m_pElevator->LiftDrive(-m_pDriveController->GetRawAxis(5));
+			// If lift sensor is hit, change state.
+			if (m_pElevator->IsLiftSensorHit())
+			{	
+				// Get Timer.
+				m_dDelayStartTime = m_pTimer->Get();
+				// Change state.
+				m_nLiftState = eLift8;
+			}
+			break;
+
+        case eLift8 :
 			// Print out Lift State.
             SmartDashboard::PutString("Lift State", "Lift Raising");
 			// Wait for arm to be at setpoint, and sensor is still hit after timeout.
-			if (m_pArm->IsReady() && (m_pTimer->Get() >= (m_dDelayStartTime + SmartDashboard::GetNumber("Lift Sensor Timeout", 0.3))) && m_pElevator->IsLiftSensorHit())
+			if ((m_pArm->IsReady()) &&
+				(m_pTimer->Get() >= (m_dDelayStartTime + SmartDashboard::GetNumber("Lift Sensor Timeout", 0.3))) && 
+				(m_pElevator->IsLiftSensorHit()))
 			{
 				// Stop Lift Drive.
 				m_pElevator->LiftDrive(0.0);
 				// Move elevator back up.
 				m_pElevator->SetSetpoint(dLiftEndHeight);
 				// Move to next state.
-				m_nLiftState = eLift8;
+				m_nLiftState = eLift9;
 			}
             break;
 
-        case eLift8 :
+        case eLift9 :
 			// Print out Lift State.
         	SmartDashboard::PutString("Lift State", "Lift Driving");
 			if (m_pElevator->IsReady() && m_pElevator->IsStabilizerSensorHit())
@@ -680,15 +691,15 @@ void CRobotMain::LiftStateMachine()
 					// Stop drive completely.
 					m_pDrive->ManualDrive(0.0, 0.0);
 					// Raise cylinder.
-					m_pElevator->ToggleStabilizer1(false);
+					m_pElevator->EnableStabilizer(false);
 					// Start timer.
 					m_dDelayStartTime = m_pTimer->Get();
 					// Move state.
-					m_nLiftState = eLift9;
+					m_nLiftState = eLift10;
 			}
             break;
 
-		case eLift9	:
+		case eLift10	:
 			// Print out Lift State.
             SmartDashboard::PutString("Lift State", "Lift Ending");
 			// Keep drive stopped.

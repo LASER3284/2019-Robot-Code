@@ -17,8 +17,11 @@ using namespace rev;
 using namespace frc;
 
 // Drive Constants.
-const double dDriveOpenLoopRampRate		=	 0.700;		// Open Loop Ramp Rate.
-const double dJoystickDeadzone			=	 0.20;		// Joystick Axis Deadzone.
+const double dDriveLowOpenLoopRampRate	=	 0.550;		// Open Loop Ramp Rate for low gear.
+const double dDriveHighOpenLoopRampRate	=	 0.850;		// Open Loop Ramp Rate for high gear.
+const double dDriveLowMaxOutput			=	 1.000;		// Max output divisor for low gear.
+const double dDriveHighMaxOutput		= 	 1.333;		// Max output divisor for high gear.
+const double dJoystickDeadzone			=	 0.150;		// Joystick Axis Deadzone.
 const double dJoystickBandwidth			=	 1.000;		// Filter for ramping joystick values.
 /////////////////////////////////////////////////////////////////////////////
 
