@@ -26,7 +26,7 @@ const double dElevatorCargoMidSetpoint	= 28.0;
 const double dElevatorCargoHighSetpoint = 54.8;
 const double dElevatorCargoShipSetpoint = 17.4;
 const double dElevatorCargoFeederSetpoint	= 17.0;
-const double dArmCargoFloorSetpoint		= 84.0;
+const double dArmCargoFloorSetpoint		= 82.5;
 const double dArmCargoLowSetpoint		= 0.00;
 const double dArmCargoMidSetpoint		= 0.00;
 const double dArmCargoHighSetpoint		= 0.00;
@@ -34,11 +34,11 @@ const double dArmCargoShipSetpoint		= 0.00;
 const double dElevatorHatchLowSetpoint	= 0.00;
 const double dElevatorHatchMidSetpoint	= 8.54;
 const double dElevatorHatchHighSetpoint = 37.39;
-const double dArmHatchLowSetpoint		= 84.0;
+const double dArmHatchLowSetpoint		= 82.5;
 const double dArmHatchMidSetpoint		= 0.00;
 const double dArmHatchHighSetpoint		= 0.00;
-const double dLiftArmSetpoint			= 86.0;			// here
-const double dLiftStartHeight			= 20.5;			// here
+const double dLiftArmSetpoint			= 86.0;
+const double dLiftStartHeight			= 20.5;
 const double dLiftEndHeight				= 24.5;
 const double dLiftFinishDelay			= 5.00;
 const double dLiftStabilizerEngage		= 10.0;
@@ -114,7 +114,8 @@ private:
 		eLift6,
 		eLift7,
 		eLift8,
-		eLift9
+		eLift9,
+		eLift10
 	};
 
 	// Object pointers.

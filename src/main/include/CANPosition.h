@@ -82,6 +82,8 @@ public:
 	void	SetSensorInverted(bool bInverted);
 	void	ClearStickyFaults();
 	void	SetManualSpeed(double dForward, double dReverse);
+	void	SetCruiseRPM(double dRPM);
+	void	SetAcceleration(double dRPS);
 
 	WPI_TalonSRX*	GetMotorPointer()					{ return m_pMotor;														};
 	bool	IsReady()									{ return m_bReady;														};
@@ -96,7 +98,7 @@ public:
 	int		GetPulsesPerRev()							{ return m_nPulsesPerRev;												};
 	int		GetRawEncoderCounts()						{ return m_pMotor->GetSelectedSensorPosition(nCANPositionPIDLoopIdx);	};
 	void	BackOffHome(bool bBackOff)					{ m_bBackOffHome = bBackOff;											};
-
+	void	UseMotionMagic(bool bEnabled)				{ m_bMotionMagic = bEnabled;											};
 
 
 private:
@@ -110,6 +112,7 @@ private:
 	bool					m_bHomingComplete;
 	bool					m_bReady;
 	bool					m_bBackOffHome;
+	bool					m_bMotionMagic;
 	int						m_nPulsesPerRev;
 	double					m_dSetpoint;
 	double					m_dRevsPerUnit;

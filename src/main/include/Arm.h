@@ -25,14 +25,17 @@ const double dArmMaxSpeed			=  	    1.0;			// Max Finding Speed.
 const double dArmMinSpeed			=  	   -1.0;			// Min Finding Speed.
 const double dArmMaxPosition		=  	   85.0;			// Max Degrees.
 const double dArmMinPosition		=  	    0.0;			// Min Degrees.
-const double dArmRampRate			=		0.5;			// Closed Loop Ramp Rate.
-const double dArmTolerance			=		1.0;			// Positional Tolerance.
-const double dArmProportional		=		7.0;			// Proportional Gain.
-const double dArmIntegral			=		0.0;			// Integral Gain.
+const double dArmRampRate			=	  0.225;			// Closed Loop Ramp Rate.
+const double dArmTolerance			=		2.5;			// Positional Tolerance.
+const double dArmProportional		=		9.7;			// Proportional Gain.
+const double dArmIntegral			=	  0.001;			// Integral Gain.
 const double dArmDerivative			=		0.0;			// Derivative Gain.
+const double dArmFeedForward		=	  3.121;			// Feed Forward.
 const double dArmAccumIZone			=	   15.0;			// Accumulative I Zone.
 const double dArmFindingTimeout		=	    3.0;			// Max Finding Time.
 const double dArmHomingTimeout		=		3.0;			// Max Homing Time.
+const double dArmMotionMagicAccel	=	  120.0;			// Acceleration for Motion Magic in RPS.
+const double dArmMotionMagicCruiseRPM  =   60.0;			// Cruise RPM for Motion Magic.
 /////////////////////////////////////////////////////////////////////////////
 
 
