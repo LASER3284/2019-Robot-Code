@@ -97,8 +97,8 @@ void CDrive::Init()
 	m_pRightDriveMotor2->Follow(*m_pRightDriveMotor1, true); 
 	m_pRightDriveMotor3->Follow(*m_pRightDriveMotor1, false);
 	// Set the ramp rate.
-	m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveOpenLoopRampRate);
-	m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveOpenLoopRampRate);
+	m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
+	m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
 	// Set motor neutral mode to brake.
 	m_pLeftDriveMotor1->SetIdleMode(CANSparkMax::IdleMode::kBrake);
 	m_pLeftDriveMotor2->SetIdleMode(CANSparkMax::IdleMode::kBrake);
@@ -172,6 +172,24 @@ void CDrive::Tick()
 			bQuickturn = false;
 		}
 
+		// Change Ramp Rate and output depending on current gear.
+		if (IsDriveInHighGear())
+		{
+			// Set the ramp rate.
+			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
+			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
+			// Cap PercentOutput.
+			m_dYAxis = m_dYAxis / dDriveHighMaxOutput;
+		}
+		else
+		{
+			// Set the ramp rate.
+			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
+			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
+			// Cap PercentOutput.
+			m_dYAxis = m_dYAxis / dDriveLowMaxOutput;
+		}
+
 		// Drive the robot.
 		ManualDrive(m_dXAxis, m_dYAxis, bQuickturn);
 	}
@@ -192,7 +210,6 @@ void CDrive::ManualDrive(double dJoystickX, double dJoystickY, bool bQuickturn)
 {
 	m_pRobotDrive->CurvatureDrive(dJoystickY, dJoystickX, bQuickturn);
 }
-
 /****************************************************************************
 	Description:	Toggles the solenoids to change from low to high gear.
 
