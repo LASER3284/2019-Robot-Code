@@ -86,6 +86,8 @@ def multiThreading(gui, server, source=0):
         video_processor.trackingPoint = trackingPoint
         cameraSource = vision_networking.cameraSource     # Pass cameraSource from VisionNetworking to VideoGet.
         video_getter.cameraSource = cameraSource
+        distance = vision_networking.distance             # Pass objectDistance from VisionNetworking to VideoProcess.
+        video_processor.objectDistance = distance
             
         # Add delay so other threads can catch up.
         time.sleep(0.02)

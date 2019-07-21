@@ -50,7 +50,7 @@ class socketHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             self.wfile.write("<html><head></head><body>")
-            self.wfile.write('<img src="http://10.32.84.10:5810/cam.mjpg"/>')
+            self.wfile.write('<img src="http://10.32.84.10:5803/cam.mjpg"/>')
             self.wfile.write("</body></html>")
             return
 
@@ -69,7 +69,7 @@ class HTTPRefresher():
     
     def refresh(self):
         # Start HTTP server and process requests.
-        server = ThreadedHTTPServer(("10.32.84.10", 5810), socketHandler)
+        server = ThreadedHTTPServer(("10.32.84.10", 5803), socketHandler)
         print "MJPG Streaming Server Started..."
         while not stopped:
             server.handle_request()

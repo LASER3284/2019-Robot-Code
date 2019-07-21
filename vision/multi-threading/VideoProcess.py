@@ -20,6 +20,7 @@ class VideoProcess:
         self.frame = frame
         self.area = [0,0,0,0]
         self.rotation = [0,0,0,0]
+        self.objectDistance = 0
         self.trackingPoint =  0
         self.numberOfObjects = 2
         self.processedFrame = frame
@@ -200,9 +201,9 @@ class VideoProcess:
 
                             # Draw object detected text.
                             if self.trackingPoint == 0:
-                                cv2.putText(frame, "Objects Detected...", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.putText(frame, "Distance: ???", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 1, (255,255,255), 1, cv2.LINE_AA)
                             else:
-                                cv2.putText(frame, "Object Lock!", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.putText(frame, str(self.objectDistance), (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 1, (255,255,255), 1, cv2.LINE_AA)
                                 cv2.line(frame, (int(self.trackingPoint), int(box[2][1])), (int(self.trackingPoint), int(box[0][1])), (0,255,0), 2)
 
                             # Draw circles and numbers.
@@ -223,9 +224,9 @@ class VideoProcess:
                             
                             # Draw object detected text.
                             if self.trackingPoint == 0:
-                                cv2.putText(frame, "Objects Detected...", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.putText(frame, "Distance: ???", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 1, (255,255,255), 1, cv2.LINE_AA)
                             else:
-                                cv2.putText(frame, "Object Lock!", (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 0.4, (255,255,255), 1, cv2.LINE_AA)
+                                cv2.putText(frame, str(self.objectDistance), (int(self.resolution[0]) - 130, int(self.resolution[1]) - 10), font, 1, (255,255,255), 1, cv2.LINE_AA)
                                 cv2.line(frame, (int(self.trackingPoint), int(box[2][1])), (int(self.trackingPoint), int(box[0][1])), (0,255,0), 2)
                             
                             # Draw enclosing circle.

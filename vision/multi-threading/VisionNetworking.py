@@ -26,6 +26,9 @@ class VisionNetworking:
         self.area = [0,0,0,0]
         self.resolution = [0,0]
         self.rotation = [0,0,0,0]
+        self.objectWidth = 11.875
+        self.focalLength = (141 * 32) / self.objectWidth
+        self.distance = 100
         self.objectDetected = False
         self.pointArray = pointArray
         self.trackbarValues = [[0,0], [0,0], [0,0], [0, 0]]
@@ -43,12 +46,12 @@ class VisionNetworking:
         self.NWTB.putNumber("VisionMinArea", 0)
         self.NWTB.putNumber("VisionMaxArea", 5000)
         self.NWTB.putNumber("VisionTolerance", 5)
-        self.NWTB.putNumber("VisionProportional", 0.135)
-        self.NWTB.putNumber("VisionIntegral", 0.08)
+        self.NWTB.putNumber("VisionProportional", 0.18)
+        self.NWTB.putNumber("VisionIntegral", 0.1)
         self.NWTB.putNumber("VisionDerivative", 0.01)
-        self.NWTB.putNumber("VisionSpeedForward", 0.145)
-        self.NWTB.putNumber("VisionTurningSpeed", 0.12)
-        self.NWTB.putNumber("VisionNumberOfObjects", 2)
+        self.NWTB.putNumber("VisionSpeedForward", 0.20) #0.145
+        self.NWTB.putNumber("VisionTurningSpeed", 0.11)
+        self.NWTB.putNumber("VisionNumberOfObjects", 3)
         self.NWTB.putNumber("VisionCenterOffset", 0)
         self.NWTB.putNumber("VisionCameraSource", 1)
         self.NWTB.putNumber("VisionVirtualJoystickX", 0)
@@ -165,7 +168,17 @@ class VisionNetworking:
 
                 # Sorted the values in ascending order.
                 distances = sorted(distances, key=lambda distances: distances[1])
-                print "Distances: " + str(distances)
+                print distances
+
+                # Find the distance of the object using the focal length of the camera and the object size.
+                if (distances[0][1] != 0 and distances[1][1] != 0):
+                    self.distance = (self.objectWidth * self.focalLength) / (distances[1][1] - distances[0][1])
+                else:
+                    if (distances[2][1] != 0 and distances[3][1] != 0):
+                        self.distance = (self.objectWidth * self.focalLength) / (distances[3][1] - distances[2][1])
+
+                print self.distance
+                print (distances[3][1] - distances[2][1])
 
                 # Find the intersection for all pairs of points.
                 objectCounter = 0
@@ -212,7 +225,6 @@ class VisionNetworking:
                     trackingPoints[objectCounter - 1][1] = y
 
                 # Determine which point is clostest to center and above the objects.
-                print "Tracking Points: " + str(trackingPoints)
                 pointCounter = 0
                 filterPoints = [[0,0], [0,0]]
                 for point in trackingPoints:
@@ -231,7 +243,6 @@ class VisionNetworking:
                         pointCounter += 1
 
                 # Remove any numbers of infinity.
-                print "Filter Points: " + str(filterPoints)
                 for info in filterPoints:
                     if (math.isinf(info[0])) or (math.isinf(info[1])):
                         info[0] = 0
@@ -265,7 +276,6 @@ class VisionNetworking:
                         self.trackingPoint = self.resolution[0] / 2
                         self.NWTB.putNumber("VisionTrackingCenter", self.trackingPoint)
                         self.pid.set_auto_mode(False, last_output = 0)
-                    print "Tracking Point: " + str(self.trackingPoint)
 
             # Calculate the x and y joystick values for robot if in free mode.
             xCenter = 0
@@ -374,7 +384,6 @@ class VisionNetworking:
         cameraCenter = self.resolution[0] / 2
         tolerance = tolerance.value
         armActual = armActual.value
-        closestDistance = 5000
         speedForward = speedForward.value
         turningSpeed = turningSpeed.value
         joystickX = 0
@@ -420,10 +429,10 @@ class VisionNetworking:
 
         # If the bucket is up then use the bottom camera and closest distance.
         if (armActual < 65):
-            self.NWTB.putNumber("VisionCameraSource", 1)
+            self.NWTB.putNumber("VisionCameraSource", 2)
         # If the bucket is down then use the top camera and farthest distance.
         if (armActual > 65):
-            self.NWTB.putNumber("VisionCameraSource", 2)
+            self.NWTB.putNumber("VisionCameraSource", 1)
 
         # Set max speed for turning speed.
         if (joystickX <= turningSpeed * -1):
