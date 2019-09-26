@@ -95,6 +95,14 @@ void CArm::Init()
 	m_pArmMotor->SetCruiseRPM(dArmMotionMagicCruiseRPM);
     // Clear sticky faults.
     m_pArmMotor->ClearStickyFaults();
+
+	// Create SmartDashboard Keys.
+	SmartDashboard::PutBoolean("Arm IsReady", 	m_pArmMotor->IsReady());
+	SmartDashboard::PutNumber("Arm Setpoint", 	m_pArmMotor->GetSetpoint());
+	SmartDashboard::PutNumber("Arm Actual", 	m_pArmMotor->GetActual());
+    SmartDashboard::PutBoolean("Arm Brake",     !m_pArmBrake->Get());
+	SmartDashboard::PutBoolean("Arm Fwd Switch", m_pArmMotor->IsFwdLimitSwitchPressed());
+	SmartDashboard::PutBoolean("Arm Rev Switch", m_pArmMotor->IsRevLimitSwitchPressed());
 }
 
 /****************************************************************************
@@ -128,13 +136,6 @@ void CArm::Tick()
 		// Engage brake.
 		m_pArmBrake->Set(false);
 	}
-	// Put information on SmartDashboard for Auto/Teleop.
-	SmartDashboard::PutBoolean("Arm IsReady", 	m_pArmMotor->IsReady());
-	SmartDashboard::PutNumber("Arm Setpoint", 	m_pArmMotor->GetSetpoint());
-	SmartDashboard::PutNumber("Arm Actual", 	m_pArmMotor->GetActual());
-    SmartDashboard::PutBoolean("Arm Brake",     !m_pArmBrake->Get());
-	SmartDashboard::PutBoolean("Arm Fwd Switch", m_pArmMotor->IsFwdLimitSwitchPressed());
-	SmartDashboard::PutBoolean("Arm Rev Switch", m_pArmMotor->IsRevLimitSwitchPressed());
 }
 
 /****************************************************************************
