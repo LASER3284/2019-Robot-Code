@@ -134,7 +134,8 @@ void CRobotMain::RobotPeriodic()
 	m_pVision->CameraTick();
 	m_pVision->DriveTick();
 	m_bAuxControllerIsArmActive = m_pAuxController->GetRawButton(9);
-	SmartDashboard::PutNumber("Voltage", m_pPDP->GetVoltage());
+	// Update all things on SmartDashboard
+	SmartDashboard::UpdateValues();
 }
 
 /******************************************************************************
