@@ -114,6 +114,10 @@ void CDrive::Init()
 	m_pRightDriveMotor1->ClearFaults();
 	// Shift to high gear.
 	m_pShiftSolenoid->Set(false);
+	// Put drive information on SmartDashboard for Auto/Teleop.
+	SmartDashboard::PutBoolean("High Gear", IsDriveInHighGear());
+	SmartDashboard::PutNumber("Left Drive Raw", m_pLeftEncoder->Get());
+	SmartDashboard::PutNumber("Right Drive Raw", m_pRightEncoder->Get());
 }
 
 /****************************************************************************
@@ -193,11 +197,6 @@ void CDrive::Tick()
 		// Drive the robot.
 		ManualDrive(m_dXAxis, m_dYAxis, bQuickturn);
 	}
-
-	// Put drive information on SmartDashboard for Auto/Teleop.
-	SmartDashboard::PutBoolean("High Gear", IsDriveInHighGear());
-	SmartDashboard::PutNumber("Left Drive Raw", m_pLeftEncoder->Get());
-	SmartDashboard::PutNumber("Right Drive Raw", m_pRightEncoder->Get());
 }
 /****************************************************************************
 	Description:	Method to manually drive robot.
