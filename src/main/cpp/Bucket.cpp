@@ -76,6 +76,9 @@ void CBucket::Init()
 	m_pIntakeRollers->SetNeutralMode(NeutralMode::Brake);
 	m_nBucketState = eBucketIdle;
 	m_pTimer->Start();
+	// Put information on SmartDashboard for Auto/Teleop.
+	SmartDashboard::PutBoolean("CargoIntakeSensor", m_pCargoSensor->Get());
+	SmartDashboard::PutBoolean("HatchIntakeSensor", !m_pHatchSensor->Get());
 }
 
 /****************************************************************************
@@ -90,10 +93,6 @@ void CBucket::Tick()
 {
 	// Call Bucket state machine.
 	BucketStateMachine();
-
-	// Put information on SmartDashboard for Auto/Teleop.
-	SmartDashboard::PutBoolean("CargoIntakeSensor", m_pCargoSensor->Get());
-	SmartDashboard::PutBoolean("HatchIntakeSensor", !m_pHatchSensor->Get());
 }
 
 /****************************************************************************
@@ -109,7 +108,10 @@ void CBucket::BucketStateMachine()
 	{
 		case eBucketAuto :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketIdle");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketAuto")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketAuto");
+			}
 			// Close hatch intake.
 			m_pHatchIntake->Set(true);
 			// Extend hatch mech.
@@ -121,7 +123,10 @@ void CBucket::BucketStateMachine()
 		********************************************************************/
 		case eBucketIdle :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketIdle");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketIdle")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketIdle");
+			}
 			// Turn Intake off.
 			m_pIntakeRollers->Set(0.0);
 			break;
@@ -131,7 +136,10 @@ void CBucket::BucketStateMachine()
 		********************************************************************/
 		case eBucketHolding :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketHolding");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketHolding")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketHolding");
+			}
 			// Set intake to holding.
 			m_pIntakeRollers->Set(dBucketRollerHoldSpeed);
 			// Retract Hatch mechanism if not already.
@@ -145,7 +153,10 @@ void CBucket::BucketStateMachine()
 		********************************************************************/
 		case eBucketHatchIntake1 :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketHatchIntake");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketHatchIntake")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketHatchIntake");
+			}			
 			// Turn Intake off.
 			m_pIntakeRollers->Set(0.0);
 			// Extend Actuator if not already.
@@ -174,7 +185,10 @@ void CBucket::BucketStateMachine()
 		********************************************************************/
 		case eBucketHatchEject1 :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketHatchIntake1");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketHatchEject")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketHatchEject");
+			}
 			// Turn Intake off.
 			m_pIntakeRollers->Set(0.0);
 			// Move to next state.
@@ -182,8 +196,6 @@ void CBucket::BucketStateMachine()
 			break;
 
 		case eBucketHatchEject2 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketHatchIntake2");
 			// If eject button is pressed, begin eject.
 			if (m_bStartEject)
 			{
@@ -197,8 +209,6 @@ void CBucket::BucketStateMachine()
 			break;
 
 		case eBucketHatchEject3 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketHatchIntake3");
 			// If eject delay has been reached, Eject.
 			if (m_pTimer->Get() - m_dDelayStartTime >= dBucketEjectDelay)
 			{
@@ -212,8 +222,6 @@ void CBucket::BucketStateMachine()
 			break;
 
 		case eBucketHatchEject4 :
-			// Print out Bucket State
-			SmartDashboard::PutString("Bucket State", "eBucketHatchIntake4");
 			// If retract delay has been reached, retract.
 			if ((m_pTimer->Get() - m_dDelayStartTime) >= dBucketRetractDelay)
 			{
@@ -229,8 +237,10 @@ void CBucket::BucketStateMachine()
 			eBucketCargoIntake - Motors on, Hatch mechanism retracted.
 		********************************************************************/
 		case eBucketCargoIntake1 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketCargoIntake1");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketCargoIntake")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketCargoIntake");
+			}
 			// Retract hatch mechanisms
 			m_pHatchActuator->Set(false);
 			m_pHatchIntake->Set(false);
@@ -241,8 +251,6 @@ void CBucket::BucketStateMachine()
 			break;
 		
 		case eBucketCargoIntake2 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketCargoIntake2");
 			// Wait until sensor is hit.
 			if (m_pCargoSensor->Get())
 			{
@@ -258,7 +266,10 @@ void CBucket::BucketStateMachine()
 		********************************************************************/
 		case eBucketCargoEject1 :
 			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketCargoEject1");
+			if (SmartDashboard::GetString("Bucket State", "") != "eBucketCargoEject")
+			{
+				SmartDashboard::PutString("Bucket State", "eBucketCargoEject");
+			}
 			// Retract Hatch mechanisms.
 			m_pHatchActuator->Set(false);
 			m_pHatchIntake->Set(false);
@@ -267,8 +278,6 @@ void CBucket::BucketStateMachine()
 			break;
 			
 		case eBucketCargoEject2 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketCargoEject2");
 			// Check if the eject button was pressed.
 			if (m_bStartEject)
 			{
@@ -284,8 +293,6 @@ void CBucket::BucketStateMachine()
 			break;
 
 		case eBucketCargoEject3 :
-			// Print out Bucket State.
-			SmartDashboard::PutString("Bucket State", "eBucketCargoEject1");
 			// If stop timeout has been reached, stop motors.
 			if ((m_pTimer->Get() - m_dDelayStartTime) >= dBucketCargoEjectDelay)
 			{
@@ -375,7 +382,5 @@ void CBucket::TestIntakeHatch()
 ****************************************************************************/
 void CBucket::TestSensors()
 {
-	SmartDashboard::PutBoolean("CargoIntakeSensor", m_pCargoSensor->Get());
-	SmartDashboard::PutBoolean("HatchIntakeSensor", !m_pHatchSensor->Get());
 }
 /////////////////////////////////////////////////////////////////////////////
