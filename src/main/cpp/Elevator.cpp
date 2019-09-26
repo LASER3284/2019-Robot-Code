@@ -125,6 +125,15 @@ void CElevator::Init()
     m_pLiftDrive->ClearStickyFaults();
     // Start timer.
     m_pTimer->Start();
+    // Put information on SmartDashboard for Auto/Teleop.
+    SmartDashboard::PutBoolean("Elevator IsReady", 	m_pElevator1->IsReady());
+    SmartDashboard::PutNumber("Elevator Setpoint", 	m_pElevator1->GetSetpoint());
+    SmartDashboard::PutNumber("Elevator Actual", 	m_pElevator1->GetActual());
+    SmartDashboard::PutBoolean("Elevator Brake",     !m_pElevatorBrake->Get());
+    SmartDashboard::PutBoolean("Elevator Fwd Switch", m_pElevator1->IsFwdLimitSwitchPressed());
+    SmartDashboard::PutBoolean("Elevator Rev Switch", m_pElevator1->IsRevLimitSwitchPressed());
+    SmartDashboard::PutBoolean("Lift Sensor", IsLiftSensorHit());
+    SmartDashboard::PutBoolean("Stabilizer Sensor", IsStabilizerSensorHit());
 }
 
 /****************************************************************************
@@ -158,16 +167,6 @@ void CElevator::Tick()
 		// Engage brake.
 		m_pElevatorBrake->Set(false);
 	}
-
-	// Put information on SmartDashboard for Auto/Teleop.
-	SmartDashboard::PutBoolean("Elevator IsReady", 	m_pElevator1->IsReady());
-	SmartDashboard::PutNumber("Elevator Setpoint", 	m_pElevator1->GetSetpoint());
-	SmartDashboard::PutNumber("Elevator Actual", 	m_pElevator1->GetActual());
-    SmartDashboard::PutBoolean("Elevator Brake",     !m_pElevatorBrake->Get());
-	SmartDashboard::PutBoolean("Elevator Fwd Switch", m_pElevator1->IsFwdLimitSwitchPressed());
-	SmartDashboard::PutBoolean("Elevator Rev Switch", m_pElevator1->IsRevLimitSwitchPressed());
-    SmartDashboard::PutBoolean("Lift Sensor", IsLiftSensorHit());
-    SmartDashboard::PutBoolean("Stabilizer Sensor", IsStabilizerSensorHit());
 }
 
 /****************************************************************************
