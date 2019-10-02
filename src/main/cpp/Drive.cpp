@@ -131,13 +131,16 @@ void CDrive::Tick()
 		// Quickturn variable.
 		bool bQuickturn = false;
 
+		// Get the Left Trigger axis from the joystick, multiply then add 1 to change to a range of 1->3
+		double m_dLeftAxis = (m_pDriveController->GetRawAxis(2) * 2.0) + 1.0;
+
 		// Get the Y axis value from the joystick.
 		m_dYAxis = m_pDriveController->GetRawAxis(1);
 		// Check if the Y Axis value is outside of the deadzone.
 		if (fabs(m_dYAxis) >= dJoystickDeadzone)
 		{
-			// Valid Y Axis value outside of deadzone.
-			m_dYAxis = m_pDriveController->GetRawAxis(1);
+			// Valid Y Axis value, apply the divisor.
+			m_dYAxis = m_pDriveController->GetRawAxis(1) / m_dLeftAxis;
 		}
 		else
 		{
@@ -150,7 +153,7 @@ void CDrive::Tick()
 		// Check if the X Axis value is outside of the deadzone.
 		if (fabs(m_dXAxis) >= dJoystickDeadzone)
 		{
-			// Valid X Axis value, apply the divisor.
+			// Valid X Axis value, apply the divisor and reverse the axis.
 			m_dXAxis = (-1 * (m_dXAxis / (SmartDashboard::GetNumber("X Axis Divisor", 2.000))));
 		}
 		else
@@ -159,10 +162,7 @@ void CDrive::Tick()
 			m_dXAxis = 0.000;
 		}
 
-		// Axis range is -1 to 0, take absolute value and multiply the divisor, add 1 (Divisor = 2.5 when not held, else 1)
-		m_dXAxis = m_dXAxis / ((fabs(m_pDriveController->GetRawAxis(2) - 1.0) * 1.5) + 1.0);
-	
-		// If not moving forward, enable ability to pivot.
+		// If not moving forward or in Low Gear, enable ability to pivot.
 		if ((!IsDriveInHighGear()) || (fabs(m_dYAxis) <= dJoystickDeadzone))
 		{
 			bQuickturn = true;
@@ -179,7 +179,10 @@ void CDrive::Tick()
 			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
 			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
 			// Cap PercentOutput.
-			m_dYAxis = m_dYAxis / dDriveHighMaxOutput;
+			if (fabs(m_dYAxis) > dDriveHighMaxOutput)
+			{
+				m_dYAxis = copysign(dDriveHighMaxOutput, m_dYAxis);
+			}
 		}
 		else
 		{
@@ -187,9 +190,12 @@ void CDrive::Tick()
 			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
 			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
 			// Cap PercentOutput.
-			m_dYAxis = m_dYAxis / dDriveLowMaxOutput;
+			if (fabs(m_dYAxis) > dDriveLowMaxOutput)
+			{
+				m_dYAxis = copysign(dDriveLowMaxOutput, m_dYAxis);
+			}
 		}
-
+		
 		// Drive the robot.
 		ManualDrive(m_dXAxis, m_dYAxis, bQuickturn);
 	}
@@ -206,9 +212,17 @@ void CDrive::Tick()
 
 	Returns: 		Nothing
 ****************************************************************************/
-void CDrive::ManualDrive(double dJoystickX, double dJoystickY, bool bQuickturn)
+void CDrive::ManualDrive(double dJoystickX, double dJoystickY, bool bArcadeMode)
 {
-	m_pRobotDrive->CurvatureDrive(dJoystickY, dJoystickX, bQuickturn);
+	// Use Curvature, unless ArcadeDrive is requested.
+	if (!bArcadeMode)
+	{
+		m_pRobotDrive->CurvatureDrive(dJoystickY, dJoystickX, false);
+	}
+	else
+	{
+		m_pRobotDrive->ArcadeDrive(dJoystickY, dJoystickX, true);
+	}
 }
 /****************************************************************************
 	Description:	Toggles the solenoids to change from low to high gear.
