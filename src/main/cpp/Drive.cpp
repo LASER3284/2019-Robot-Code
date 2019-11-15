@@ -162,14 +162,14 @@ void CDrive::Tick()
 			m_dXAxis = 0.000;
 		}
 
-		// If not moving forward or in Low Gear, enable ability to pivot.
-		if ((!IsDriveInHighGear()) || (fabs(m_dYAxis) <= dJoystickDeadzone))
+		// If not moving forward in low gear, square inputs.
+		if ((fabs(m_dYAxis) >= dJoystickDeadzone) && IsDriveInHighGear())
 		{
-			bQuickturn = true;
+			bQuickturn = false;
 		}
 		else
 		{
-			bQuickturn = false;
+			bQuickturn = true;
 		}
 
 		// Change Ramp Rate and output depending on current gear.
@@ -181,7 +181,7 @@ void CDrive::Tick()
 			// Cap PercentOutput.
 			if (fabs(m_dYAxis) > dDriveHighMaxOutput)
 			{
-				m_dYAxis = copysign(dDriveHighMaxOutput, m_dYAxis);
+				m_dYAxis = m_dYAxis / (1/dDriveHighMaxOutput);
 			}
 		}
 		else
@@ -192,7 +192,7 @@ void CDrive::Tick()
 			// Cap PercentOutput.
 			if (fabs(m_dYAxis) > dDriveLowMaxOutput)
 			{
-				m_dYAxis = copysign(dDriveLowMaxOutput, m_dYAxis);
+				m_dYAxis = m_dYAxis / (1/dDriveLowMaxOutput);
 			}
 		}
 		
@@ -214,15 +214,7 @@ void CDrive::Tick()
 ****************************************************************************/
 void CDrive::ManualDrive(double dJoystickX, double dJoystickY, bool bArcadeMode)
 {
-	// Use Curvature, unless ArcadeDrive is requested.
-	if (!bArcadeMode)
-	{
-		m_pRobotDrive->CurvatureDrive(dJoystickY, dJoystickX, false);
-	}
-	else
-	{
-		m_pRobotDrive->ArcadeDrive(dJoystickY, dJoystickX, true);
-	}
+	m_pRobotDrive->ArcadeDrive(dJoystickY, dJoystickX, bArcadeMode);
 }
 /****************************************************************************
 	Description:	Toggles the solenoids to change from low to high gear.
