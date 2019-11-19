@@ -22,10 +22,11 @@ using namespace rev;
 
 	Derived From:	Nothing
 ****************************************************************************/
-CDrive::CDrive(Joystick* pDriveController)
+CDrive::CDrive(Joystick* pDriveController1, Joystick* pDriveController2)
 {
 	// Store a copy of the drive controller.
-	m_pDriveController					= pDriveController;
+	m_pDriveController1					= pDriveController1;
+	m_pDriveController2					= pDriveController2;
 
 	// Create the object pointers.
 	m_pLeftDriveMotor1					= new CANSparkMax(nLeftDriveMotor1, CANSparkMax::MotorType::kBrushless);
@@ -128,19 +129,16 @@ void CDrive::Tick()
 {
 	if (m_bJoystickControl)
 	{
-		// Quickturn variable.
-		bool bQuickturn = false;
+		// Get the inputs for the joysticks; Left Stick Y Axis, Right Stick X Axis.
+		m_dYAxis = m_pDriveController1->GetAxis(frc::Joystick::AxisType::kYAxis);
+		m_dXAxis = m_pDriveController2->GetAxis(frc::Joystick::AxisType::kXAxis);
 
-		// Get the Left Trigger axis from the joystick, multiply then add 1 to change to a range of 1->3
-		double m_dLeftAxis = (m_pDriveController->GetRawAxis(2) * 2.0) + 1.0;
-
-		// Get the Y axis value from the joystick.
-		m_dYAxis = m_pDriveController->GetRawAxis(1);
-		// Check if the Y Axis value is outside of the deadzone.
+		// Do deadzone checks to make sure we aren't letting the robot drift with the sticks.
+		// Check if Y Axis is within the deadzone.
 		if (fabs(m_dYAxis) >= dJoystickDeadzone)
 		{
-			// Valid Y Axis value, apply the divisor.
-			m_dYAxis = m_pDriveController->GetRawAxis(1) / m_dLeftAxis;
+			// Copy the sign of the Axis, "exponentiate" the input.
+			m_dYAxis = copysign(pow(m_dYAxis, 4), m_dYAxis);
 		}
 		else
 		{
@@ -148,13 +146,11 @@ void CDrive::Tick()
 			m_dYAxis = 0.000;
 		}
 
-		// Get the X axis value from the joystick.
-		m_dXAxis = m_pDriveController->GetRawAxis(4);
-		// Check if the X Axis value is outside of the deadzone.
+		// Check if Y Axis is within the deadzone.
 		if (fabs(m_dXAxis) >= dJoystickDeadzone)
 		{
-			// Valid X Axis value, apply the divisor and reverse the axis.
-			m_dXAxis = (-1 * (m_dXAxis / (SmartDashboard::GetNumber("X Axis Divisor", 2.000))));
+			// Valid X Axis value, apply the divisor.
+			m_dXAxis = m_dXAxis / (SmartDashboard::GetNumber("X Axis Divisor", 2.000));
 		}
 		else
 		{
@@ -162,42 +158,8 @@ void CDrive::Tick()
 			m_dXAxis = 0.000;
 		}
 
-		// If not moving forward in low gear, square inputs.
-		if ((fabs(m_dYAxis) >= dJoystickDeadzone) && IsDriveInHighGear())
-		{
-			bQuickturn = false;
-		}
-		else
-		{
-			bQuickturn = true;
-		}
-
-		// Change Ramp Rate and output depending on current gear.
-		if (IsDriveInHighGear())
-		{
-			// Set the ramp rate.
-			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
-			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveHighOpenLoopRampRate);
-			// Cap PercentOutput.
-			if (fabs(m_dYAxis) > dDriveHighMaxOutput)
-			{
-				m_dYAxis = m_dYAxis / (1/dDriveHighMaxOutput);
-			}
-		}
-		else
-		{
-			// Set the ramp rate.
-			m_pLeftDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
-			m_pRightDriveMotor1->SetOpenLoopRampRate(dDriveLowOpenLoopRampRate);
-			// Cap PercentOutput.
-			if (fabs(m_dYAxis) > dDriveLowMaxOutput)
-			{
-				m_dYAxis = m_dYAxis / (1/dDriveLowMaxOutput);
-			}
-		}
-		
 		// Drive the robot.
-		ManualDrive(m_dXAxis, m_dYAxis, bQuickturn);
+		ManualDrive(m_dXAxis, m_dYAxis);
 	}
 
 	// Put drive information on SmartDashboard for Auto/Teleop.
@@ -212,9 +174,10 @@ void CDrive::Tick()
 
 	Returns: 		Nothing
 ****************************************************************************/
-void CDrive::ManualDrive(double dJoystickX, double dJoystickY, bool bArcadeMode)
+void CDrive::ManualDrive(double dJoystickX, double dJoystickY)
 {
-	m_pRobotDrive->ArcadeDrive(dJoystickY, dJoystickX, bArcadeMode);
+	// We will be squaring the input manually to driver's tastes.
+	m_pRobotDrive->ArcadeDrive(dJoystickY, dJoystickX, false);
 }
 /****************************************************************************
 	Description:	Toggles the solenoids to change from low to high gear.
