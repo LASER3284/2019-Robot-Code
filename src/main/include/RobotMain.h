@@ -119,7 +119,8 @@ private:
 	};
 
 	// Object pointers.
-	Joystick*	m_pDriveController;	
+	Joystick*	m_pDriveController1;
+	Joystick*	m_pDriveController2;	
 	Joystick*	m_pAuxController;
 	CDrive*		m_pDrive;
 	CElevator*	m_pElevator;
