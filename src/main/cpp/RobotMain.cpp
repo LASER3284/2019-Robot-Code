@@ -728,7 +728,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Shift Gears (LS Toggle)
 	********************************************************************/
 	// Check to see if the Left Analog Stick was pressed.
-	if (m_pDriveController1->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
+	if (m_pDriveController1->GetRawButton(eButtonTrigger) && !m_bDriveControllerButtonLSPressed)
 	{
 		m_bDriveControllerButtonLSPressed = true;
 		// Shift gears.
@@ -741,7 +741,7 @@ void CRobotMain::TeleopPeriodic()
 			m_bDriveControllerButtonLSPressed = false;
 		}
 	}
-
+#if 0
 	/********************************************************************
 		Drive Controller - Vision Tracking Mode (RT Hold)
 	********************************************************************/
@@ -911,7 +911,7 @@ void CRobotMain::TeleopPeriodic()
 			m_bDriveControllerButtonYPressed = false;
 		}
 	}
-
+#endif
 	/********************************************************************
 		Aux Controller - Move to Hatch low position (LB Press)
 	********************************************************************/
