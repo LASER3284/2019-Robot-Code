@@ -131,10 +131,8 @@ void CRobotMain::RobotInit()
 void CRobotMain::RobotPeriodic()
 {
 	// Call Vision Camera tick.
-	m_pVision->CameraTick();
 	m_pVision->DriveTick();
 	m_bAuxControllerIsArmActive = m_pAuxController->GetRawButton(9);
-	SmartDashboard::PutNumber("Voltage", m_pPDP->GetVoltage());
 }
 
 /******************************************************************************

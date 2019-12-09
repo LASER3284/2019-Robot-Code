@@ -1,5 +1,6 @@
 # 3284 2019 Robot Code Release
 Robot Code from the 2019 season, Destination: Deep Space.
+Confirmed working with WPILib 2019.4.1, REVRobotics 1.4.1, Phoenix 5.14.1
 ## Branches
 **"master" branch** contains most development and changes. All other branches should be forked from master.
 <br>
