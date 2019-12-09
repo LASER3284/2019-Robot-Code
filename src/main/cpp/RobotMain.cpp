@@ -28,9 +28,10 @@ using namespace frc;
 CRobotMain::CRobotMain() : TimedRobot()
 {
     // Create the object pointers.
-    m_pDriveController  = new Joystick(0);
-	m_pAuxController	= new Joystick(1);
-    m_pDrive            = new CDrive(m_pDriveController);
+    m_pDriveController1 = new Joystick(0);
+	m_pDriveController2 = new Joystick(1);
+	m_pAuxController	= new Joystick(2);
+    m_pDrive            = new CDrive(m_pDriveController1, m_pDriveController2);
 	m_pElevator			= new CElevator();
 	m_pArm				= new CArm();
 	m_pBucket			= new CBucket();
@@ -74,7 +75,7 @@ CRobotMain::CRobotMain() : TimedRobot()
 CRobotMain::~CRobotMain()
 {
     // Delete object pointers.
-    delete m_pDriveController;
+    delete m_pDriveController1;
 	delete m_pAuxController;
     delete m_pDrive;
 	delete m_pElevator;
@@ -83,7 +84,8 @@ CRobotMain::~CRobotMain()
 	delete m_pTimer;
 	delete m_pPDP;
     // Set object pointers to nullptrs.
-    m_pDriveController 	= nullptr;
+    m_pDriveController1 = nullptr;
+	m_pDriveController2 = nullptr;
 	m_pAuxController	= nullptr;
     m_pDrive 			= nullptr;
 	m_pElevator 		= nullptr;
@@ -610,7 +612,7 @@ void CRobotMain::LiftStateMachine()
 			// Print out Lift State.
 			SmartDashboard::PutString("Lift State", "Lift Check Locks");
             // Check if Driver is finished with locking system.
-	        if (m_pDriveController->GetRawButton(eStart))
+	        if (m_pDriveController1->GetRawButton(eStart))
 	        {
 				// Record Position.
 				dLiftPosition = m_pElevator->GetActual();
@@ -638,9 +640,9 @@ void CRobotMain::LiftStateMachine()
             // Print out Lift State.
             SmartDashboard::PutString("Lift State", "Lift Driving");
 			// Start Lift Drive on Right Stick Y.
-            m_pElevator->LiftDrive(-m_pDriveController->GetRawAxis(5));
+            m_pElevator->LiftDrive(-m_pDriveController1->GetRawAxis(5));
 			// As soon as the lift moves, fire cylinder (only once)
-			if ((fabs(m_pDriveController->GetRawAxis(5)) >= 0.15) && bCylinderFired == false)
+			if ((fabs(m_pDriveController1->GetRawAxis(5)) >= 0.15) && bCylinderFired == false)
 			{
 				bCylinderFired = true;
 				m_pElevator->EnableStabilizer(true);
@@ -653,7 +655,7 @@ void CRobotMain::LiftStateMachine()
 			// Print out Lift State.
 			SmartDashboard::PutString("Lift State", "Lift Checking Sensor");
 			// Start Lift Drive on Right Stick Y.
-            m_pElevator->LiftDrive(-m_pDriveController->GetRawAxis(5));
+            m_pElevator->LiftDrive(-m_pDriveController1->GetRawAxis(5));
 			// If lift sensor is hit, change state.
 			if (m_pElevator->IsLiftSensorHit())
 			{	
@@ -726,7 +728,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Shift Gears (LS Toggle)
 	********************************************************************/
 	// Check to see if the Left Analog Stick was pressed.
-	if (m_pDriveController->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
+	if (m_pDriveController1->GetRawButton(eButtonTrigger) && !m_bDriveControllerButtonLSPressed)
 	{
 		m_bDriveControllerButtonLSPressed = true;
 		// Shift gears.
@@ -734,17 +736,17 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonLS) && m_bDriveControllerButtonLSPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonLS) && m_bDriveControllerButtonLSPressed)
 		{
 			m_bDriveControllerButtonLSPressed = false;
 		}
 	}
-
+#if 0
 	/********************************************************************
 		Drive Controller - Vision Tracking Mode (RT Hold)
 	********************************************************************/
 	// Check to see if Right Trigger was pressed
-	if (m_pDriveController->GetRawAxis(3) > 0.70)
+	if (m_pDriveController1->GetRawAxis(3) > 0.70)
 	{
 		SmartDashboard::PutBoolean("VisionIsActive", true);
 	}
@@ -757,7 +759,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Move to Cargo Pickup position (RB Press)
 	********************************************************************/
 	// Check to see if Right Bumper was pressed
-	if (m_pDriveController->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
 	{
 		m_bDriveControllerButtonRBPressed = true;
 		// Go to Teleop Cargo Pickup.
@@ -765,7 +767,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonRB) && m_bDriveControllerButtonRBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonRB) && m_bDriveControllerButtonRBPressed)
 		{
 			m_bDriveControllerButtonRBPressed = false;
 		}
@@ -775,7 +777,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Move to Hatch Pickup position (LB Press)
 	********************************************************************/
 	// Check to see if Left Bumper was pressed
-	if (m_pDriveController->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
 	{
 		m_bDriveControllerButtonLBPressed = true;
 		// Go to Teleop Hatch Pickup.
@@ -783,7 +785,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonLB) && m_bDriveControllerButtonLBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonLB) && m_bDriveControllerButtonLBPressed)
 		{
 			m_bDriveControllerButtonLBPressed = false;
 		}
@@ -793,14 +795,14 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Eject game element. (A Press)
 	********************************************************************/
 	// Check to see if A Button was pressed
-	if (m_pDriveController->GetRawButton(eButtonA) && !m_bDriveControllerButtonAPressed)
+	if (m_pDriveController1->GetRawButton(eButtonA) && !m_bDriveControllerButtonAPressed)
 	{
 		m_bDriveControllerButtonAPressed = true;
 		m_pBucket->StartEject(true);
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonA) && m_bDriveControllerButtonAPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonA) && m_bDriveControllerButtonAPressed)
 		{
 			m_bDriveControllerButtonAPressed = false;
 			m_pBucket->StartEject(false);
@@ -811,7 +813,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Start Lift (Back + Start Press)
 	********************************************************************/
 	// Check to see if Both Back + Start was pressed.
-	if (m_pDriveController->GetRawButton(eBack) && m_pDriveController->GetRawButton(eStart))
+	if (m_pDriveController1->GetRawButton(eBack) && m_pDriveController1->GetRawButton(eStart))
 	{
 		m_nTeleopState = eTeleopLifting1;
 	}
@@ -820,7 +822,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Manually Eject Cargo (POV Left Press)
 	********************************************************************/
 	// Check to see if Left POV is pressed.
-	if ((m_pDriveController->GetPOV() == 270) && !m_bDriveControllerPOVLeftPressed)
+	if ((m_pDriveController1->GetPOV() == 270) && !m_bDriveControllerPOVLeftPressed)
 	{
 		m_bDriveControllerPOVLeftPressed = true;
 		// Manually set the state to eject cargo.
@@ -829,7 +831,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (m_pDriveController->GetPOV() != 270 && m_bDriveControllerPOVLeftPressed)
+		if (m_pDriveController1->GetPOV() != 270 && m_bDriveControllerPOVLeftPressed)
 		{
 			m_bDriveControllerPOVLeftPressed = false;
 			m_pBucket->StartEject(false);
@@ -840,7 +842,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Manually Eject Hatch (POV Right Press)
 	********************************************************************/
 	// Check to see if Right POV is pressed.
-	if ((m_pDriveController->GetPOV() == 90) && !m_bDriveControllerPOVRightPressed)
+	if ((m_pDriveController1->GetPOV() == 90) && !m_bDriveControllerPOVRightPressed)
 	{
 		m_bDriveControllerPOVRightPressed = true;
 		// Manually set the state to eject hatch.
@@ -849,7 +851,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (m_pDriveController->GetPOV() != 90 && m_bDriveControllerPOVRightPressed)
+		if (m_pDriveController1->GetPOV() != 90 && m_bDriveControllerPOVRightPressed)
 		{
 			m_bDriveControllerPOVRightPressed = false;
 			m_pBucket->StartEject(false);
@@ -860,7 +862,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Intake Cargo in Feeder (X Press)
 	********************************************************************/
 	// Check to see if X Button is pressed.
-	if (m_pDriveController->GetRawButton(eButtonX) && !m_bDriveControllerButtonXPressed)
+	if (m_pDriveController1->GetRawButton(eButtonX) && !m_bDriveControllerButtonXPressed)
 	{
 		m_bDriveControllerButtonXPressed = true;
 		// Go to Teleop Cargo Feeder.
@@ -868,7 +870,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonX) && m_bDriveControllerButtonXPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonX) && m_bDriveControllerButtonXPressed)
 		{
 			m_bDriveControllerButtonXPressed = false;
 		}
@@ -878,7 +880,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Eject Cargo in Ship (B Press)
 	********************************************************************/
 	// Check to see if B Button is pressed.
-	if (m_pDriveController->GetRawButton(eButtonB) && !m_bDriveControllerButtonBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonB) && !m_bDriveControllerButtonBPressed)
 	{
 		m_bDriveControllerButtonBPressed = true;
 		// Go to Teleop Cargo Ship eject.
@@ -886,7 +888,7 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonB) && m_bDriveControllerButtonBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonB) && m_bDriveControllerButtonBPressed)
 		{
 			m_bDriveControllerButtonBPressed = false;
 		}
@@ -896,7 +898,7 @@ void CRobotMain::TeleopPeriodic()
 		Drive Controller - Enable Short Lift. (Y Press)
 	********************************************************************/
 	// Check to see if Y Button is pressed.
-	if (m_pDriveController->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
+	if (m_pDriveController1->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
 	{
 		m_bDriveControllerButtonYPressed = true;
 		// Toggle Solenoid
@@ -904,12 +906,12 @@ void CRobotMain::TeleopPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonY) && m_bDriveControllerButtonYPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonY) && m_bDriveControllerButtonYPressed)
 		{
 			m_bDriveControllerButtonYPressed = false;
 		}
 	}
-
+#endif
 	/********************************************************************
 		Aux Controller - Move to Hatch low position (LB Press)
 	********************************************************************/
@@ -1169,7 +1171,7 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Shift Gears (LS Toggle)
 	********************************************************************/
 	// Check to see if the Left Analog Button was pressed. (Toggles the drive shift solenoid from low to high gear).
-	if (m_pDriveController->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
+	if (m_pDriveController1->GetRawButton(eButtonLS) && !m_bDriveControllerButtonLSPressed)
 	{
 		m_bDriveControllerButtonLSPressed = true;
 		// Shift gears.
@@ -1177,7 +1179,7 @@ void CRobotMain::TestPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonLS) && m_bDriveControllerButtonLSPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonLS) && m_bDriveControllerButtonLSPressed)
 		{
 			m_bDriveControllerButtonLSPressed = false;
 		}
@@ -1187,7 +1189,7 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Move arm up (Start Hold)
 	********************************************************************/
 	// Check to see if Start was pressed.
-	if (m_pDriveController->GetRawButton(eStart) && !m_bDriveControllerStartPressed)
+	if (m_pDriveController1->GetRawButton(eStart) && !m_bDriveControllerStartPressed)
 	{
 		m_bDriveControllerStartPressed = true;
 		// Move the arm upwards.
@@ -1195,7 +1197,7 @@ void CRobotMain::TestPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eStart) && m_bDriveControllerStartPressed)
+		if (!m_pDriveController1->GetRawButton(eStart) && m_bDriveControllerStartPressed)
 		{
 			m_bDriveControllerStartPressed = false;
 			// Stop the arm.
@@ -1207,7 +1209,7 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Move arm down (Back Hold)
 	********************************************************************/
 	// Check to see if Back was pressed.
-	if (m_pDriveController->GetRawButton(eBack) && !m_bDriveControllerBackPressed)
+	if (m_pDriveController1->GetRawButton(eBack) && !m_bDriveControllerBackPressed)
 	{
 		m_bDriveControllerBackPressed = true;
 		// Move the arm downwards.
@@ -1215,7 +1217,7 @@ void CRobotMain::TestPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eBack) && m_bDriveControllerBackPressed)
+		if (!m_pDriveController1->GetRawButton(eBack) && m_bDriveControllerBackPressed)
 		{
 			m_bDriveControllerBackPressed = false;
 			// Stop the arm.
@@ -1227,7 +1229,7 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Move elevator down (LB Hold)
 	********************************************************************/
 	// Check to see if LB was pressed.
-	if (m_pDriveController->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonLB) && !m_bDriveControllerButtonLBPressed)
 	{
 		m_bDriveControllerButtonLBPressed = true;
 		// Move the elevator down.
@@ -1235,7 +1237,7 @@ void CRobotMain::TestPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonLB) && m_bDriveControllerButtonLBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonLB) && m_bDriveControllerButtonLBPressed)
 		{
 			m_bDriveControllerButtonLBPressed = false;
 			// Stop the elevator.
@@ -1247,7 +1249,7 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Move elevator up (RB Hold)
 	********************************************************************/
 	// Check to see if RB was pressed.
-	if (m_pDriveController->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonRB) && !m_bDriveControllerButtonRBPressed)
 	{
 		m_bDriveControllerButtonRBPressed = true;
 		// Move the elevator upwards.
@@ -1255,7 +1257,7 @@ void CRobotMain::TestPeriodic()
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonRB) && m_bDriveControllerButtonRBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonRB) && m_bDriveControllerButtonRBPressed)
 		{
 			m_bDriveControllerButtonRBPressed = false;
 			// Stop the elevator.
@@ -1267,14 +1269,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Home Arm (POV Left Button).
 	********************************************************************/
 	// Check to see if POV Left was pressed
-	if ((m_pDriveController->GetPOV() == 270) && !m_bDriveControllerPOVLeftPressed)
+	if ((m_pDriveController1->GetPOV() == 270) && !m_bDriveControllerPOVLeftPressed)
 	{
 		m_pArm->StartHoming();
 		m_bDriveControllerPOVLeftPressed = true;
 	}
 	else
 	{
-		if ((m_pDriveController->GetPOV() != 270) && m_bDriveControllerPOVLeftPressed)
+		if ((m_pDriveController1->GetPOV() != 270) && m_bDriveControllerPOVLeftPressed)
 		{
 			m_bDriveControllerPOVLeftPressed = false;
 		}
@@ -1284,14 +1286,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Home Elevator (POV Right Button).
 	********************************************************************/
 	// Check to see if POV Right was pressed
-	if ((m_pDriveController->GetPOV() == 90) && !m_bDriveControllerPOVRightPressed)
+	if ((m_pDriveController1->GetPOV() == 90) && !m_bDriveControllerPOVRightPressed)
 	{
 		m_pElevator->StartHoming();
 		m_bDriveControllerPOVRightPressed = true;
 	}
 	else
 	{
-		if ((m_pDriveController->GetPOV() != 90) && m_bDriveControllerPOVRightPressed)
+		if ((m_pDriveController1->GetPOV() != 90) && m_bDriveControllerPOVRightPressed)
 		{
 			m_bDriveControllerPOVRightPressed = false;
 		}
@@ -1302,16 +1304,16 @@ void CRobotMain::TestPeriodic()
 						  					 (Forward - Right Trigger)
 	********************************************************************/
 	// Check if the Left Trigger value is outside of the dead zone.
-	if ((fabs(m_pDriveController->GetRawAxis(2)) > 0.250) && (fabs(m_pDriveController->GetRawAxis(3)) < 0.250))
+	if ((fabs(m_pDriveController1->GetRawAxis(2)) > 0.250) && (fabs(m_pDriveController1->GetRawAxis(3)) < 0.250))
 	{
-		m_pBucket->TestIntakeMotor(m_pDriveController->GetRawAxis(2) * -1.000);
+		m_pBucket->TestIntakeMotor(m_pDriveController1->GetRawAxis(2) * -1.000);
 	}
 	else
 	{
 		// Check if the Right Trigger value is outside of the dead zone.
-		if ((fabs(m_pDriveController->GetRawAxis(3)) > 0.250) && (fabs(m_pDriveController->GetRawAxis(2)) < 0.250))
+		if ((fabs(m_pDriveController1->GetRawAxis(3)) > 0.250) && (fabs(m_pDriveController1->GetRawAxis(2)) < 0.250))
 		{
-			m_pBucket->TestIntakeMotor(m_pDriveController->GetRawAxis(3));
+			m_pBucket->TestIntakeMotor(m_pDriveController1->GetRawAxis(3));
 		}
 		else
 		{
@@ -1323,9 +1325,9 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Drive Lift Motor (Right Y Axis)
 	********************************************************************/
 	// Check to see Right Y Axis is pressed and within deadzone.
-	if (fabs(m_pDriveController->GetRawAxis(5)) > 0.25)
+	if (fabs(m_pDriveController1->GetRawAxis(5)) > 0.25)
 	{
-		m_pElevator->TestLiftDrive(m_pDriveController->GetRawAxis(5));
+		m_pElevator->TestLiftDrive(m_pDriveController1->GetRawAxis(5));
 	}
 	else
 	{
@@ -1336,14 +1338,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Actuate hatch mechanism. (A Toggle)
 	********************************************************************/
 	// Check to see if A Button was pressed
-	if (m_pDriveController->GetRawButton(eButtonA) && !m_bDriveControllerButtonAPressed)
+	if (m_pDriveController1->GetRawButton(eButtonA) && !m_bDriveControllerButtonAPressed)
 	{
 		m_pBucket->TestActuateHatch();
 		m_bDriveControllerButtonAPressed = true;
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonA) && m_bDriveControllerButtonAPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonA) && m_bDriveControllerButtonAPressed)
 		{
 			m_bDriveControllerButtonAPressed = false;
 		}
@@ -1353,14 +1355,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Hatch Eject. (B Toggle)
 	********************************************************************/
 	// Check to see if B Button was pressed
-	if (m_pDriveController->GetRawButton(eButtonB) && !m_bDriveControllerButtonBPressed)
+	if (m_pDriveController1->GetRawButton(eButtonB) && !m_bDriveControllerButtonBPressed)
 	{
 		m_pBucket->TestEjectHatch();
 		m_bDriveControllerButtonBPressed = true;
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonB) && m_bDriveControllerButtonBPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonB) && m_bDriveControllerButtonBPressed)
 		{
 			m_bDriveControllerButtonBPressed = false;
 		}
@@ -1370,14 +1372,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Hatch Intake. (X Toggle)
 	********************************************************************/
 	// Check to see if X Button was pressed
-	if (m_pDriveController->GetRawButton(eButtonX) && !m_bDriveControllerButtonXPressed)
+	if (m_pDriveController1->GetRawButton(eButtonX) && !m_bDriveControllerButtonXPressed)
 	{
 		m_pBucket->TestIntakeHatch();
 		m_bDriveControllerButtonXPressed = true;
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonX) && m_bDriveControllerButtonXPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonX) && m_bDriveControllerButtonXPressed)
 		{
 			m_bDriveControllerButtonXPressed = false;
 		}
@@ -1387,14 +1389,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Lift Solenoids. (Y Toggle)
 	********************************************************************/
 	// Check to see if Y Button was pressed
-	if (m_pDriveController->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
+	if (m_pDriveController1->GetRawButton(eButtonY) && !m_bDriveControllerButtonYPressed)
 	{
 		m_pElevator->EngageLift(true);
 		m_bDriveControllerButtonYPressed = true;
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonY) && m_bDriveControllerButtonYPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonY) && m_bDriveControllerButtonYPressed)
 		{
 			m_pElevator->EngageLift(false);
 			m_bDriveControllerButtonYPressed = false;
@@ -1405,14 +1407,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Lift Stablizer Solenoid. (RS Toggle)
 	********************************************************************/
 	// Check to see if Right Stick was pressed
-	if (m_pDriveController->GetRawButton(eButtonRS) && !m_bDriveControllerButtonRSPressed)
+	if (m_pDriveController1->GetRawButton(eButtonRS) && !m_bDriveControllerButtonRSPressed)
 	{
 		m_pElevator->ToggleStabilizer();
 		m_bDriveControllerButtonRSPressed = true;
 	}
 	else
 	{
-		if (!m_pDriveController->GetRawButton(eButtonRS) && m_bDriveControllerButtonRSPressed)
+		if (!m_pDriveController1->GetRawButton(eButtonRS) && m_bDriveControllerButtonRSPressed)
 		{
 			m_bDriveControllerButtonRSPressed = false;
 		}
@@ -1422,14 +1424,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Elevator Brake (POV Down Toggle)
 	********************************************************************/
 	// Check to see if POV Down was pressed
-	if ((m_pDriveController->GetPOV() == 180) && !m_bDriveControllerPOVDownPressed)
+	if ((m_pDriveController1->GetPOV() == 180) && !m_bDriveControllerPOVDownPressed)
 	{
 		m_pElevator->TestBrake();
 		m_bDriveControllerPOVDownPressed = true;
 	}
 	else
 	{
-		if ((m_pDriveController->GetPOV() != 180) && m_bDriveControllerPOVDownPressed)
+		if ((m_pDriveController1->GetPOV() != 180) && m_bDriveControllerPOVDownPressed)
 		{
 			m_bDriveControllerPOVDownPressed = false;
 		}
@@ -1439,14 +1441,14 @@ void CRobotMain::TestPeriodic()
 		Drive Controller - Arm Brake (POV Up Button)
 	********************************************************************/
 	// Check to see if POV Up was pressed
-	if ((m_pDriveController->GetPOV() == 0) && !m_bDriveControllerPOVUpPressed)
+	if ((m_pDriveController1->GetPOV() == 0) && !m_bDriveControllerPOVUpPressed)
 	{
 		m_pArm->TestBrake();
 		m_bDriveControllerPOVUpPressed = true;
 	}
 	else
 	{
-		if ((m_pDriveController->GetPOV() != 0) && m_bDriveControllerPOVUpPressed)
+		if ((m_pDriveController1->GetPOV() != 0) && m_bDriveControllerPOVUpPressed)
 		{
 			m_bDriveControllerPOVUpPressed = false;
 		}

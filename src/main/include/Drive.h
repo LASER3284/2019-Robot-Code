@@ -35,13 +35,13 @@ const double dJoystickDeadzone			=	 0.115;		// Joystick Axis Deadzone.
 class CDrive
 {
 public:
-	CDrive(Joystick* pDriveController);
+	CDrive(Joystick* pDriveController1, Joystick* pDriveController2);
 	~CDrive();
 
 	void	Init();
 	void 	Tick();
 	void	Stop();
-	void	ManualDrive(double dJoystickX, double dJoystickY, bool bQuickturn = true);
+	void	ManualDrive(double dJoystickX, double dJoystickY);
 	void 	Shift(bool bLowGear);
 	void	SetJoystickControl(bool bJoystickControl);
 	void	SetMotorExpiration(double dTimeout);
@@ -53,7 +53,8 @@ public:
 
 private:
 	// Object pointers.
-	Joystick*			m_pDriveController;
+	Joystick*			m_pDriveController1;
+	Joystick*			m_pDriveController2;
 	DifferentialDrive*	m_pRobotDrive;
 	CANSparkMax*		m_pLeftDriveMotor1;
 	CANSparkMax*		m_pLeftDriveMotor2;
