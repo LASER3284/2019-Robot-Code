@@ -130,8 +130,8 @@ void CDrive::Tick()
 	if (m_bJoystickControl)
 	{
 		// Get the inputs for the joysticks; Left Stick Y Axis, Right Stick X Axis.
-		m_dYAxis = m_pDriveController1->GetAxis(frc::Joystick::AxisType::kYAxis);
-		m_dXAxis = m_pDriveController2->GetAxis(frc::Joystick::AxisType::kXAxis);
+		m_dYAxis = m_pDriveController1->GetRawAxis(frc::Joystick::AxisType::kYAxis);
+		m_dXAxis = m_pDriveController2->GetRawAxis(frc::Joystick::AxisType::kXAxis);
 
 		// Do deadzone checks to make sure we aren't letting the robot drift with the sticks.
 		// Check if Y Axis is within the deadzone.
